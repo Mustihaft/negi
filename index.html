@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Video Studio</title>
+<meta name="description" content="Make AI video on your own PC: script, generate with open models on your graphics card, edit on a timeline, export and publish. For Windows.">
+<meta name="color-scheme" content="dark light">
+<meta property="og:title" content="AI Video Studio">
+<meta property="og:description" content="Make AI video on your own PC. For Windows 10 and 11.">
+<meta property="og:image" content="https://mustihaft2006.github.io/ai-video-studio-download/assets/og.jpg">
+<meta property="og:type" content="website">
+<link rel="icon" href="assets/mark-light.png" media="(prefers-color-scheme: light)">
+<link rel="icon" href="assets/mark-dark.png" media="(prefers-color-scheme: dark)">
+<link rel="preload" href="assets/fonts/instrument-sans-latin-standard-normal.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+  /* Self-hosted (OFL, licence files next to the fonts): no third-party requests. */
+  @font-face { font-family: "Instrument Sans"; font-style: normal; font-display: swap; font-weight: 400 700; font-stretch: 75% 100%; src: url(assets/fonts/instrument-sans-latin-standard-normal.woff2) format("woff2-variations"); }
+  @font-face { font-family: "JetBrains Mono"; font-style: normal; font-display: swap; font-weight: 100 800; src: url(assets/fonts/jetbrains-mono-latin-wght-normal.woff2) format("woff2-variations"); }
+  /* Tokens from the app itself (apps/desktop/src/renderer/styles/tokens.css): graphite surround,
+     one tungsten accent for the action, clay only in the mark. */
+  :root {
+    --surround: #1e1f23;
+    --panel: #26272c;
+    --raised: #303137;
+    --line: #3b3c43;
+    --ink: #ecedef;
+    --ink-2: #aeb0b8;
+    --ink-3: #868892;
+    --accent: #f0a646;
+    --accent-ink: #22180a;
+    --accent-text: #f0a646;
+    --corner: #efece6;
+    --clay: #de7656;
+    --clip-video: #5b6cb8;
+    --clip-video-fill: rgb(91 108 184 / 0.32);
+    --font: 'Instrument Sans', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+    color-scheme: dark;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --surround: #e6e7ea;
+      --panel: #f4f4f6;
+      --raised: #ffffff;
+      --line: #d0d2d8;
+      --ink: #1b1c20;
+      --ink-2: #4a4d56;
+      --ink-3: #6b6e78;
+      --accent: #9a5a06;
+      --accent-ink: #ffffff;
+      --accent-text: #8a5005;
+      --corner: #1b1c20;
+      --clip-video-fill: rgb(91 108 184 / 0.18);
+      color-scheme: light;
+    }
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--surround);
+    color: var(--ink);
+    font: 400 17px/1.6 var(--font);
+  }
+  img, video, canvas { display: block; max-width: 100%; }
+  a { color: inherit; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+  .skip { position: absolute; left: 16px; top: -48px; padding: 10px 14px; background: var(--raised); border-radius: 7px; z-index: 10; }
+  .skip:focus { top: 12px; }
+
+  .wrap { width: min(1180px, 100% - 32px); margin-inline: auto; }
+
+  /* type: the condensed width is the display voice, as on the app's home screen */
+  h1, h2 {
+    margin: 0;
+    font-weight: 620;
+    font-stretch: 75%;
+    line-height: 0.98;
+    letter-spacing: -0.005em;
+    text-wrap: balance;
+  }
+  h1 { font-size: clamp(46px, 7.4vw, 92px); }
+  h2 { font-size: clamp(32px, 4.2vw, 50px); }
+  h3 { margin: 0; font-size: 19px; font-weight: 600; }
+  p { margin: 0; }
+  .lede { font-size: clamp(18px, 1.6vw, 20px); color: var(--ink-2); max-width: 34em; }
+  .small { font-size: 15px; color: var(--ink-3); }
+  .mono { font-family: var(--mono); font-size: 0.86em; }
+
+  /* header */
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 22px; }
+  .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 640; font-stretch: 85%; font-size: 18px; }
+  .brand img { width: 32px; height: 32px; border-radius: 8px; }
+  .top nav { display: flex; gap: 6px; }
+  .top nav a { text-decoration: none; color: var(--ink-2); padding: 10px 12px; border-radius: 7px; font-size: 15px; }
+  .top nav a:hover { color: var(--ink); background: var(--panel); }
+
+  /* hero */
+  .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.15fr);
+    gap: clamp(32px, 5vw, 72px);
+    align-items: center;
+    padding-block: clamp(32px, 7vw, 88px) clamp(56px, 8vw, 112px);
+  }
+  .hero-text { display: grid; gap: 26px; }
+  .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 22px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 10px;
+    min-height: 52px; padding: 0 24px;
+    background: var(--accent); color: var(--accent-ink);
+    border-radius: 9px; text-decoration: none;
+    font-weight: 640; font-size: 17px;
+    transition: filter 160ms ease-out, transform 160ms ease-out;
+  }
+  .btn:hover { filter: brightness(1.07); }
+  .btn:active { transform: scale(0.98); }
+  .btn svg { width: 20px; height: 20px; flex: none; }
+  .link { color: var(--accent-text); text-underline-offset: 3px; }
+  .link:hover { text-decoration-thickness: 2px; }
+  .meta { font-size: 15px; color: var(--ink-3); }
+
+  /* the viewfinder: the icon's hand-drawn corners around footage the app generated */
+  .viewfinder { margin: 0; display: grid; gap: 14px; }
+  .frame { position: relative; padding: clamp(16px, 2.2vw, 26px); }
+  .media { position: relative; aspect-ratio: 832 / 480; border-radius: 4px; overflow: hidden; background: #000; }
+  .media video, .media canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .media canvas { background: var(--surround); }
+  .corner { position: absolute; width: clamp(36px, 4.4vw, 56px); height: auto; color: var(--corner); }
+  .corner.tl { left: 0; top: 0; }
+  .corner.tr { right: 0; top: 0; transform: scaleX(-1); }
+  .corner.bl { left: 0; bottom: 0; transform: scaleY(-1); }
+  .corner.br { right: 0; bottom: 0; transform: scale(-1, -1); }
+  .viewfinder figcaption { padding-inline: clamp(16px, 2.2vw, 26px); }
+
+  section + section { border-top: 1px solid var(--line); }
+  .block { padding-block: clamp(56px, 8vw, 104px); display: grid; gap: 36px; }
+  .block > header { display: grid; gap: 14px; max-width: 46em; }
+
+  /* screenshot */
+  .shot { margin: 0; display: grid; gap: 14px; }
+  .shot img { width: 100%; height: auto; aspect-ratio: 1480 / 900; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); }
+
+  /* the workflow, drawn as the editor's timeline: one track, five clips, the amber playhead */
+  .timeline { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); overflow: hidden; }
+  .ruler {
+    display: grid; grid-template-columns: 52px repeat(5, minmax(0, 1fr));
+    border-bottom: 1px solid var(--line);
+    font: 400 12px/1 var(--mono); color: var(--ink-3);
+  }
+  .ruler span { padding: 10px 8px 8px; border-left: 1px solid var(--line); }
+  .ruler span:first-child { border-left: 0; }
+  /* clips of different lengths, like a real cut; the ruler keeps its own even time scale */
+  .track { margin: 0; padding: 0; list-style: none; position: relative; display: grid; grid-template-columns: 52px minmax(0, 0.9fr) minmax(0, 1.3fr) minmax(0, 1.15fr) minmax(0, 0.95fr) minmax(0, 1fr); }
+  .track-name { display: grid; place-items: center; font: 600 13px/1 var(--font); color: var(--clip-video); border-right: 1px solid var(--line); }
+  .clip {
+    margin: 10px 4px; padding: 14px 14px 16px;
+    background: var(--clip-video-fill); border: 1px solid var(--clip-video); border-radius: 3px;
+    display: grid; gap: 8px; align-content: start;
+  }
+  .clip p { font-size: 15px; line-height: 1.5; color: var(--ink-2); }
+  .playhead { position: absolute; top: 0; bottom: 0; left: 52px; width: 2px; background: var(--accent); pointer-events: none; }
+  .playhead::before {
+    content: ''; position: absolute; top: 0; left: -5px;
+    border: 6px solid transparent; border-top: 8px solid var(--accent);
+  }
+  .timeline-wrap { position: relative; }
+
+  /* editions */
+  table { width: 100%; min-width: 560px; border-collapse: collapse; table-layout: fixed; font-size: 16px; }
+  th, td { text-align: left; padding: 16px 18px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  thead th { font-weight: 640; font-size: 19px; font-stretch: 85%; border-bottom-color: var(--ink-3); }
+  thead th small { display: block; font-weight: 400; font-size: 15px; color: var(--ink-3); font-stretch: 100%; }
+  tbody th { font-weight: 500; color: var(--ink-2); width: 32%; }
+  td.no { color: var(--ink-3); }
+  .table-box { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); overflow-x: auto; }
+  .table-box tr:last-child > * { border-bottom: 0; }
+
+  /* install: a real sequence, so it is numbered */
+  .steps { margin: 0; padding: 0; list-style: none; counter-reset: step; display: grid; gap: 18px; max-width: 46em; }
+  .steps li { counter-increment: step; display: grid; grid-template-columns: 40px 1fr; gap: 14px; align-items: start; }
+  .steps li::before {
+    content: counter(step); display: grid; place-items: center;
+    width: 32px; height: 32px; border-radius: 50%;
+    border: 1px solid var(--line); background: var(--panel);
+    font-weight: 600; font-size: 15px; color: var(--ink-2);
+  }
+  .steps h3 { margin-bottom: 4px; }
+  .steps p { color: var(--ink-2); }
+  .needs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .needs > div { border: 1px solid var(--line); border-radius: 10px; padding: 20px 22px; background: var(--panel); display: grid; gap: 8px; align-content: start; }
+  .needs ul { margin: 0; padding-left: 1.1em; color: var(--ink-2); display: grid; gap: 4px; }
+
+  .final { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 24px; }
+
+  footer { border-top: 1px solid var(--line); padding-block: 36px 48px; display: grid; gap: 10px; }
+  .hash { word-break: break-all; color: var(--ink-2); }
+
+  @media (max-width: 960px) {
+    .hero { grid-template-columns: 1fr; }
+    .viewfinder { order: -1; }
+  }
+  @media (max-width: 760px) {
+    body { font-size: 16px; }
+    .top nav a:not(.keep) { display: none; }
+    .ruler { display: none; }
+    .track { grid-template-columns: 1fr; padding: 8px; }
+    .track-name, .playhead { display: none; }
+    .clip { margin: 6px 0; }
+    .needs { grid-template-columns: 1fr; }
+    th, td { padding: 12px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .btn { transition: none; }
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="./">
+      <picture>
+        <source srcset="assets/mark-light.png" media="(prefers-color-scheme: light)">
+        <img src="assets/mark-dark.png" alt="" width="32" height="32">
+      </picture>
+      AI Video Studio
+    </a>
+    <nav aria-label="Page">
+      <a href="#how">How it works</a>
+      <a href="#editions">Editions</a>
+      <a class="keep" href="#install">Install</a>
+    </nav>
+  </header>
+</div>
+
+<main id="main">
+  <div class="wrap">
+    <section class="hero" aria-labelledby="title">
+      <div class="hero-text">
+        <h1 id="title">Make AI video on your own PC.</h1>
+        <p class="lede">AI Video Studio turns an idea into a finished video. It writes the script with a local language model, generates every scene with open video models on your graphics card, and gives you a timeline to cut it together. Your projects stay on your computer.</p>
+        <div class="actions">
+          <a class="btn" data-dl href="https://github.com/Mustihaft2006/ai-video-studio-download/releases/download/v0.1.6/AI-Video-Studio-Setup-0.1.6-x64.exe">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+            Download for Windows
+          </a>
+          <a class="link" href="https://github.com/Mustihaft2006/ai-video-studio-download/releases">Other versions</a>
+        </div>
+        <p class="meta">Version <span data-version>0.1.6</span>, <span data-size>175 MB</span>. Windows 10 and 11, 64-bit.</p>
+      </div>
+
+      <figure class="viewfinder">
+        <div class="frame">
+          <div class="media">
+            <video data-hero muted loop playsinline preload="auto" poster="assets/foxes-poster.webp" aria-label="Two red foxes running through snow in a pine forest, generated by AI Video Studio">
+              <source src="assets/foxes.mp4" type="video/mp4">
+            </video>
+          </div>
+          <svg class="corner tl" viewBox="0 0 48 48" aria-hidden="true"><path fill="currentColor" d="M4.2 46.5C3.1 33.9 3.4 18.6 5.6 7.9 6.4 5.4 8.3 4.6 11.4 4.4 22.6 3.6 33.9 3.7 45.1 5.2c1.9.4 2.3 2.6.6 3.9-1.4.9-3.3 1.4-5.6 1.5-8.5.3-16.6.8-24.7 2.3-1.8.4-2.4 1.6-2.6 3.6-.6 9.3-.5 18.9-.9 28.6-.2 1.9-1.6 3-3.6 3-1.9 0-3.4-.6-3.5-1.6Z"/></svg>
+          <svg class="corner tr" viewBox="0 0 48 48" aria-hidden="true"><path fill="currentColor" d="M4.2 46.5C3.1 33.9 3.4 18.6 5.6 7.9 6.4 5.4 8.3 4.6 11.4 4.4 22.6 3.6 33.9 3.7 45.1 5.2c1.9.4 2.3 2.6.6 3.9-1.4.9-3.3 1.4-5.6 1.5-8.5.3-16.6.8-24.7 2.3-1.8.4-2.4 1.6-2.6 3.6-.6 9.3-.5 18.9-.9 28.6-.2 1.9-1.6 3-3.6 3-1.9 0-3.4-.6-3.5-1.6Z"/></svg>
+          <svg class="corner bl" viewBox="0 0 48 48" aria-hidden="true"><path fill="currentColor" d="M4.2 46.5C3.1 33.9 3.4 18.6 5.6 7.9 6.4 5.4 8.3 4.6 11.4 4.4 22.6 3.6 33.9 3.7 45.1 5.2c1.9.4 2.3 2.6.6 3.9-1.4.9-3.3 1.4-5.6 1.5-8.5.3-16.6.8-24.7 2.3-1.8.4-2.4 1.6-2.6 3.6-.6 9.3-.5 18.9-.9 28.6-.2 1.9-1.6 3-3.6 3-1.9 0-3.4-.6-3.5-1.6Z"/></svg>
+          <svg class="corner br" viewBox="0 0 48 48" aria-hidden="true"><path fill="currentColor" d="M4.2 46.5C3.1 33.9 3.4 18.6 5.6 7.9 6.4 5.4 8.3 4.6 11.4 4.4 22.6 3.6 33.9 3.7 45.1 5.2c1.9.4 2.3 2.6.6 3.9-1.4.9-3.3 1.4-5.6 1.5-8.5.3-16.6.8-24.7 2.3-1.8.4-2.4 1.6-2.6 3.6-.6 9.3-.5 18.9-.9 28.6-.2 1.9-1.6 3-3.6 3-1.9 0-3.4-.6-3.5-1.6Z"/></svg>
+        </div>
+        <figcaption class="small">Generated with AI Video Studio on a GeForce RTX 3060 Ti in 2 min 42 s: Wan 2.1 (1.3B), 832 × 480, 33 frames.</figcaption>
+      </figure>
+    </section>
+  </div>
+
+  <section class="wrap block" aria-labelledby="editor-title">
+    <header>
+      <h2 id="editor-title">A real editor, not a prompt box.</h2>
+      <p class="lede">Generated clips land in your media library next to your own footage, images and music. Arrange them on video and audio tracks, add titles, fades and cross-dissolves, and step back with undo whenever you like.</p>
+    </header>
+    <figure class="shot">
+      <picture>
+        <source srcset="assets/editor-light.webp" media="(prefers-color-scheme: light)">
+        <img src="assets/editor-dark.webp" alt="The AI Video Studio editor: media library, program monitor showing the fox clip, clip settings, and a timeline with a video track, a title and a music track." width="1480" height="900" loading="lazy">
+      </picture>
+      <figcaption class="small">The editor with the fox clip, a title and a music bed.</figcaption>
+    </figure>
+  </section>
+
+  <section class="wrap block" id="how" aria-labelledby="how-title">
+    <header>
+      <h2 id="how-title">From idea to published video.</h2>
+    </header>
+    <div class="timeline-wrap">
+      <div class="timeline">
+        <div class="ruler" aria-hidden="true"><span></span><span>00:00:00</span><span>00:00:05</span><span>00:00:10</span><span>00:00:15</span><span>00:00:20</span></div>
+        <ol class="track" aria-label="Steps">
+          <li class="track-name" aria-hidden="true">V1</li>
+          <li class="clip"><h3>Write</h3><p>Turn an idea into a script and scenes with a local model in Ollama or LM Studio, or any OpenAI-compatible service.</p></li>
+          <li class="clip"><h3>Generate</h3><p>Each scene becomes a clip through ComfyUI on your graphics card. Wan 2.1 comes set up and tested.</p></li>
+          <li class="clip"><h3>Edit</h3><p>Trim, split and arrange clips on as many tracks as you need, with titles, fades and cross-dissolves.</p></li>
+          <li class="clip"><h3>Export</h3><p>Render H.264, H.265, VP9 or ProRes. Every file is checked before it is saved. FFmpeg is included.</p></li>
+          <li class="clip"><h3>Publish</h3><p>Post to YouTube, Mastodon, Bluesky, Telegram or Discord, right away or on a schedule.</p></li>
+        </ol>
+        <div class="playhead" aria-hidden="true"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap block" id="editions" aria-labelledby="editions-title">
+    <header>
+      <h2 id="editions-title">Editions</h2>
+      <p class="lede">Everything you need to make a video is free. Paid editions add higher export resolutions and publishing.</p>
+    </header>
+    <div class="table-box">
+      <table>
+        <thead>
+          <tr>
+            <td></td>
+            <th scope="col">Community<small>Free</small></th>
+            <th scope="col">Creator<small>Activation key</small></th>
+            <th scope="col">Studio<small>Activation key</small></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><th scope="row">Write, generate and edit</th><td>Included</td><td>Included</td><td>Included</td></tr>
+          <tr><th scope="row">Export resolution</th><td>Up to 480p</td><td>Up to 1080p</td><td>Up to 4K</td></tr>
+          <tr><th scope="row">Publish and schedule posts</th><td class="no">Prepares files to post yourself</td><td>Included</td><td>Included</td></tr>
+          <tr><th scope="row">Analytics and comment inbox</th><td class="no">Not included</td><td class="no">Not included</td><td>Included</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="small">Enter an activation key on the app's License page, or keep using Community. Your projects never depend on a license.</p>
+  </section>
+
+  <section class="wrap block" id="install" aria-labelledby="install-title">
+    <header>
+      <h2 id="install-title">Install</h2>
+    </header>
+    <ol class="steps">
+      <li><div><h3>Download the installer</h3><p>About <span data-size>175 MB</span>. It installs for your Windows user only and needs no administrator rights.</p></div></li>
+      <li><div><h3>Get past the SmartScreen warning</h3><p>The installer is not code-signed yet, so Windows may show “Windows protected your PC”. Choose <b>More info</b>, then <b>Run anyway</b>.</p></div></li>
+      <li><div><h3>Start AI Video Studio</h3><p>Enter an activation key, or continue with the free Community edition.</p></div></li>
+    </ol>
+    <div class="needs">
+      <div>
+        <h3>To run the app</h3>
+        <ul>
+          <li>Windows 10 or 11, 64-bit</li>
+          <li>Editing and export work on any recent PC</li>
+        </ul>
+      </div>
+      <div>
+        <h3>To generate video on your PC</h3>
+        <ul>
+          <li>An NVIDIA graphics card with about 8 GB of memory (tested on an RTX 3060 Ti)</li>
+          <li>ComfyUI with the Wan 2.1 models, about 9 GB to download. Connect it under Models &amp; providers.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="final">
+      <a class="btn" data-dl href="https://github.com/Mustihaft2006/ai-video-studio-download/releases/download/v0.1.6/AI-Video-Studio-Setup-0.1.6-x64.exe">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+        Download for Windows
+      </a>
+      <p class="meta">Version <span data-version>0.1.6</span></p>
+    </div>
+  </section>
+</main>
+
+<div class="wrap">
+  <footer>
+    <p class="small">Check your download: the installer's SHA-256 is <span class="mono hash" data-sha>a1a917146124645e73ac38e304c951367ad7cfeebdb0c5bac28ab78664bc05c0</span>. In PowerShell, run <span class="mono">Get-FileHash</span> on the file and compare.</p>
+    <p class="small">The installer includes FFmpeg, licensed under the GPL. <a class="link" href="https://github.com/Mustihaft2006/ai-video-studio-download/releases">All versions</a></p>
+  </footer>
+</div>
+
+<script>
+  // Newest release from GitHub; the links above already point at a working installer if this fails.
+  fetch('https://api.github.com/repos/Mustihaft2006/ai-video-studio-download/releases/latest')
+    .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+    .then((rel) => {
+      const exe = rel.assets.find((a) => /\.exe$/i.test(a.name))
+      if (!exe) return
+      const sha = (rel.body || '').match(/\b[a-f0-9]{64}\b/i)
+      document.querySelectorAll('[data-dl]').forEach((a) => (a.href = exe.browser_download_url))
+      document.querySelectorAll('[data-version]').forEach((s) => (s.textContent = rel.tag_name.replace(/^v/, '')))
+      document.querySelectorAll('[data-size]').forEach((s) => (s.textContent = Math.round(exe.size / 1048576) + ' MB'))
+      if (sha) document.querySelectorAll('[data-sha]').forEach((s) => (s.textContent = sha[0].toLowerCase()))
+    })
+    .catch(() => {})
+
+  // The one orchestrated moment: the clip resolves from the mark's halftone dots into footage.
+  const video = document.querySelector('[data-hero]')
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches
+  if (still) {
+    video.controls = true
+  } else {
+    const box = video.parentElement
+    const canvas = document.createElement('canvas')
+    canvas.setAttribute('aria-hidden', 'true')
+    box.append(canvas)
+    const ctx = canvas.getContext('2d')
+    const sample = document.createElement('canvas').getContext('2d', { willReadFrequently: true })
+    const clay = getComputedStyle(document.documentElement).getPropertyValue('--clay').trim()
+    const bg = getComputedStyle(canvas).backgroundColor
+    const start = () => {
+      const w = (canvas.width = Math.round(box.clientWidth * devicePixelRatio))
+      const h = (canvas.height = Math.round(box.clientHeight * devicePixelRatio))
+      const t0 = performance.now()
+      const ms = 1700
+      const frame = (now) => {
+        const p = Math.min(1, (now - t0) / ms)
+        const cols = Math.round(18 + 70 * p * p) // the grid gets finer as the picture resolves
+        const cell = w / cols
+        const rows = Math.ceil(h / cell)
+        sample.canvas.width = cols
+        sample.canvas.height = rows
+        sample.drawImage(video, 0, 0, cols, rows)
+        const px = sample.getImageData(0, 0, cols, rows).data
+        ctx.fillStyle = bg
+        ctx.fillRect(0, 0, w, h)
+        ctx.fillStyle = clay
+        for (let y = 0; y < rows; y++)
+          for (let x = 0; x < cols; x++) {
+            const i = (y * cols + x) * 4
+            const lum = (0.2126 * px[i] + 0.7152 * px[i + 1] + 0.0722 * px[i + 2]) / 255
+            const r = (cell / 2) * Math.sqrt(lum) * 0.95
+            if (r < 0.4) continue
+            ctx.beginPath()
+            ctx.arc(x * cell + cell / 2, y * cell + cell / 2, r, 0, Math.PI * 2)
+            ctx.fill()
+          }
+        canvas.style.opacity = String(p < 0.6 ? 1 : 1 - (p - 0.6) / 0.4)
+        if (p < 1) requestAnimationFrame(frame)
+        else canvas.remove()
+      }
+      requestAnimationFrame(frame)
+    }
+    video.play().then(start, () => {
+      canvas.remove()
+      video.controls = true // autoplay blocked (e.g. battery saver)
+    })
+  }
+</script>
+</body>
+</html>
