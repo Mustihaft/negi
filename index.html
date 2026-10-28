@@ -3,11 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Negi</title>
-<meta name="description" content="Negi: make AI video on your own PC. Script, generate with open models on your graphics card, edit on a timeline, export and publish. For Windows.">
-<meta name="color-scheme" content="dark light">
+<title>Negi: make AI video on your own PC</title>
+<meta name="description" content="Negi is a Windows app for making AI video on your own PC: a language model drafts the script, open video models render each scene on your graphics card, and a timeline editor cuts it together.">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#17181b">
 <meta property="og:title" content="Negi">
-<meta property="og:description" content="Make AI video on your own PC. For Windows 10 and 11.">
+<meta property="og:description" content="Turn an idea into a finished video, on your own PC. For Windows 10 and 11.">
 <meta property="og:image" content="https://mustihaft.github.io/negi/assets/og.jpg">
 <meta property="og:type" content="website">
 <link rel="icon" href="assets/mark-light.png" media="(prefers-color-scheme: light)">
@@ -17,300 +18,451 @@
   /* Self-hosted (OFL, licence files next to the fonts): no third-party requests. */
   @font-face { font-family: "Instrument Sans"; font-style: normal; font-display: swap; font-weight: 400 700; font-stretch: 75% 100%; src: url(assets/fonts/instrument-sans-latin-standard-normal.woff2) format("woff2-variations"); }
   @font-face { font-family: "JetBrains Mono"; font-style: normal; font-display: swap; font-weight: 100 800; src: url(assets/fonts/jetbrains-mono-latin-wght-normal.woff2) format("woff2-variations"); }
-  /* Tokens from the app itself (apps/desktop/src/renderer/styles/tokens.css): graphite surround,
-     one tungsten accent for the action, clay only in the mark. */
+
+  /* The app's own palette (apps/desktop/src/renderer/styles/tokens.css), one step darker so the
+     app window reads as the lit object in the room: graphite, one tungsten accent for actions,
+     clay only in the halftone, Miku teal only for selected text. */
   :root {
-    --surround: #1e1f23;
-    --panel: #26272c;
-    --raised: #303137;
-    --line: #3b3c43;
+    --bg: #17181b;
+    --panel: #1f2024;
+    --raised: #292a30;
+    --line: #33343b;
+    --line-strong: #4a4b53;
     --ink: #ecedef;
-    --ink-2: #aeb0b8;
-    --ink-3: #868892;
+    --ink-2: #b6b8c0;
+    --ink-3: #9a9ca6;
     --accent: #f0a646;
     --accent-ink: #22180a;
-    --accent-text: #f0a646;
     --corner: #efece6;
     --clay: #de7656;
-    --clip-video: #5b6cb8;
-    --clip-video-fill: rgb(91 108 184 / 0.32);
     --font: 'Instrument Sans', system-ui, sans-serif;
     --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --bar: 64px;
     color-scheme: dark;
-  }
-  @media (prefers-color-scheme: light) {
-    :root {
-      --surround: #e6e7ea;
-      --panel: #f4f4f6;
-      --raised: #ffffff;
-      --line: #d0d2d8;
-      --ink: #1b1c20;
-      --ink-2: #4a4d56;
-      --ink-3: #6b6e78;
-      --accent: #9a5a06;
-      --accent-ink: #ffffff;
-      --accent-text: #8a5005;
-      --corner: #1b1c20;
-      --clip-video-fill: rgb(91 108 184 / 0.18);
-      color-scheme: light;
-    }
   }
 
   *, *::before, *::after { box-sizing: border-box; }
-  html { -webkit-text-size-adjust: 100%; }
-  body {
-    margin: 0;
-    background: var(--surround);
-    color: var(--ink);
-    font: 400 17px/1.6 var(--font);
-  }
+  html { -webkit-text-size-adjust: 100%; scroll-padding-top: calc(var(--bar) + 16px); }
+  @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 400 17px/1.6 var(--font); }
   img, video, canvas { display: block; max-width: 100%; }
   a { color: inherit; }
   /* 39 = mi-ku: her colour, only for people who select text */
   ::selection { background: #39c5bb; color: #10201f; }
   :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
-  .skip { position: absolute; left: 16px; top: -48px; padding: 10px 14px; background: var(--raised); border-radius: 7px; z-index: 10; }
+  .skip { position: absolute; left: 16px; top: -60px; padding: 10px 14px; background: var(--raised); border-radius: 7px; z-index: 40; }
   .skip:focus { top: 12px; }
-
-  .wrap { width: min(1180px, 100% - 32px); margin-inline: auto; }
+  .wrap { width: min(1200px, 100% - 32px); margin-inline: auto; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
   /* type: the condensed width is the display voice, as on the app's home screen */
-  h1, h2 {
-    margin: 0;
-    font-weight: 620;
-    font-stretch: 75%;
-    line-height: 0.98;
-    letter-spacing: -0.005em;
-    text-wrap: balance;
-  }
-  h1 { font-size: clamp(46px, 7.4vw, 92px); }
-  h2 { font-size: clamp(32px, 4.2vw, 50px); }
-  h3 { margin: 0; font-size: 19px; font-weight: 600; }
+  h1, h2 { margin: 0; font-weight: 620; font-stretch: 75%; line-height: 0.98; letter-spacing: -0.005em; text-wrap: balance; }
+  h1 { font-size: clamp(46px, 6.4vw, 88px); }
+  h2 { font-size: clamp(34px, 3.8vw, 52px); }
+  h3, h4 { margin: 0; font-size: 19px; line-height: 1.3; font-weight: 600; }
   p { margin: 0; }
-  .lede { font-size: clamp(18px, 1.6vw, 20px); color: var(--ink-2); max-width: 34em; }
-  .small { font-size: 15px; color: var(--ink-3); }
-  .mono { font-family: var(--mono); font-size: 0.86em; }
+  .lede { font-size: clamp(18px, 1.5vw, 20px); color: var(--ink-2); max-width: 36em; }
+  .small, .note { font-size: 15px; color: var(--ink-3); }
+  .note { max-width: 62em; }
+  code, .mono { font-family: var(--mono); font-size: 0.86em; }
+  .link { color: var(--accent); text-underline-offset: 3px; }
+  .link:hover { text-decoration-thickness: 2px; }
+  b { font-weight: 600; color: var(--ink); }
 
-  /* header */
-  .top { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 22px; }
-  .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 640; font-stretch: 85%; font-size: 18px; }
-  .brand img { width: 32px; height: 32px; border-radius: 8px; }
-  .top nav { display: flex; gap: 6px; }
-  .top nav a { text-decoration: none; color: var(--ink-2); padding: 10px 12px; border-radius: 7px; font-size: 15px; }
-  .top nav a:hover { color: var(--ink); background: var(--panel); }
-
-  /* hero */
-  .hero {
-    display: grid;
-    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.15fr);
-    gap: clamp(32px, 5vw, 72px);
-    align-items: center;
-    padding-block: clamp(32px, 7vw, 88px) clamp(56px, 8vw, 112px);
-  }
-  .hero-text { display: grid; gap: 26px; }
-  .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 22px; }
+  /* buttons */
   .btn {
-    display: inline-flex; align-items: center; gap: 10px;
-    min-height: 52px; padding: 0 24px;
-    background: var(--accent); color: var(--accent-ink);
-    border-radius: 9px; text-decoration: none;
-    font-weight: 640; font-size: 17px;
-    transition: filter 160ms ease-out, transform 160ms ease-out;
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    min-height: 52px; padding: 0 24px; border-radius: 9px;
+    background: var(--accent); color: var(--accent-ink); border: 1px solid var(--accent);
+    font: 640 17px/1 var(--font); text-decoration: none; cursor: pointer;
+    transition: filter 160ms ease-out, background-color 160ms ease-out, transform 160ms ease-out;
   }
   .btn:hover { filter: brightness(1.07); }
   .btn:active { transform: scale(0.98); }
   .btn svg { width: 20px; height: 20px; flex: none; }
-  .link { color: var(--accent-text); text-underline-offset: 3px; }
-  .link:hover { text-decoration-thickness: 2px; }
+  .btn.quiet { background: transparent; color: var(--ink); border-color: var(--line-strong); }
+  .btn.quiet:hover { filter: none; background: var(--raised); }
+  .btn.sm { min-height: 40px; padding: 0 16px; font-size: 15px; }
+
+  /* header */
+  .bar { position: sticky; top: 0; z-index: 30; background: var(--bg); border-bottom: 1px solid var(--line); }
+  .bar .wrap { display: flex; align-items: center; gap: 20px; min-height: var(--bar); }
+  .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 640; font-stretch: 85%; font-size: 19px; margin-right: auto; }
+  .brand img { width: 30px; height: 30px; border-radius: 8px; }
+  .nav { display: flex; gap: 2px; }
+  .nav a, .menu a { text-decoration: none; color: var(--ink-2); padding: 10px 12px; border-radius: 7px; font-size: 15px; }
+  .nav a:hover, .menu a:hover { color: var(--ink); background: var(--panel); }
+  .menu { display: none; position: relative; }
+  .menu summary { list-style: none; cursor: pointer; min-height: 40px; display: grid; place-items: center; padding: 0 14px; border: 1px solid var(--line-strong); border-radius: 9px; font-size: 15px; }
+  .menu summary::-webkit-details-marker { display: none; }
+  .menu nav { position: absolute; right: 0; top: calc(100% + 10px); display: grid; min-width: 220px; padding: 8px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 18px 40px -12px rgb(0 0 0 / 0.6); }
+  .menu nav a { padding: 12px; }
+
+  /* hero: the headline beside the pitch, then the app itself */
+  .hero { padding-block: clamp(40px, 6vw, 80px) clamp(56px, 8vw, 104px); display: grid; gap: clamp(36px, 5vw, 64px); }
+  .hero-head { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 24px clamp(32px, 5vw, 72px); align-items: end; }
+  .hero-side { display: grid; gap: 24px; }
+  .actions { display: flex; flex-wrap: wrap; gap: 12px; }
   .meta { font-size: 15px; color: var(--ink-3); }
 
-  /* the viewfinder: the icon's hand-drawn corners around footage the app generated */
-  .viewfinder { margin: 0; display: grid; gap: 14px; }
-  .frame { position: relative; padding: clamp(16px, 2.2vw, 26px); }
-  .media { position: relative; aspect-ratio: 832 / 480; border-radius: 4px; overflow: hidden; background: #000; }
-  .media video, .media canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-  .media canvas { background: var(--surround); }
-  .corner { position: absolute; width: clamp(36px, 4.4vw, 56px); height: auto; color: var(--corner); }
+  /* the viewfinder: the icon's hand-drawn corners around the real app window */
+  .stage { margin: 0; display: grid; gap: 16px; }
+  .frame { position: relative; padding: clamp(14px, 2.4vw, 30px); }
+  .window { position: relative; border-radius: 10px; overflow: hidden; border: 1px solid var(--line-strong); background: var(--panel); box-shadow: 0 40px 90px -30px rgb(0 0 0 / 0.75); }
+  .window > img { width: 100%; height: auto; aspect-ratio: 1480 / 900; }
+  /* where the program monitor's picture sits in the screenshot (site-shots monitor-rect.json) */
+  .monitor { position: absolute; left: 36.081%; top: 13.457%; width: 42.162%; height: 39%; background: #000; }
+  .monitor video, .monitor canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+  .corner { position: absolute; width: clamp(30px, 4.2vw, 56px); height: auto; color: var(--corner); }
   .corner.tl { left: 0; top: 0; }
   .corner.tr { right: 0; top: 0; transform: scaleX(-1); }
   .corner.bl { left: 0; bottom: 0; transform: scaleY(-1); }
   .corner.br { right: 0; bottom: 0; transform: scale(-1, -1); }
-  .viewfinder figcaption { padding-inline: clamp(16px, 2.2vw, 26px); }
+  .stage figcaption { padding-inline: clamp(14px, 2.4vw, 30px); max-width: 62em; }
 
-  section + section { border-top: 1px solid var(--line); }
-  .block { padding-block: clamp(56px, 8vw, 104px); display: grid; gap: 36px; }
-  .block > header { display: grid; gap: 14px; max-width: 46em; }
+  /* sections */
+  .block { padding-block: clamp(64px, 8vw, 112px); display: grid; gap: clamp(32px, 4vw, 48px); border-top: 1px solid var(--line); }
+  .block > header { display: grid; gap: 14px; max-width: 48em; }
+  .group { display: grid; gap: 20px; }
 
-  /* screenshot */
-  .shot { margin: 0; display: grid; gap: 14px; }
-  .shot img { width: 100%; height: auto; aspect-ratio: 1480 / 900; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); }
+  /* example clips */
+  .clips { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+  .clips figure { margin: 0; display: grid; gap: 12px; align-content: start; }
+  .clips video { width: 100%; height: auto; aspect-ratio: 832 / 480; border-radius: 6px; background: #000; }
+  .clips figcaption { display: grid; gap: 2px; font-size: 15px; color: var(--ink-3); }
+  .clips figcaption b { font-size: 16px; }
 
-  /* the workflow, drawn as the editor's timeline: one track, five clips, the amber playhead */
-  .timeline { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); overflow: hidden; }
-  .ruler {
-    display: grid; grid-template-columns: 52px repeat(5, minmax(0, 1fr));
-    border-bottom: 1px solid var(--line);
-    font: 400 12px/1 var(--mono); color: var(--ink-3);
-  }
-  .ruler span { padding: 10px 8px 8px; border-left: 1px solid var(--line); }
-  .ruler span:first-child { border-left: 0; }
-  /* clips of different lengths, like a real cut; the ruler keeps its own even time scale */
-  .track { margin: 0; padding: 0; list-style: none; position: relative; display: grid; grid-template-columns: 52px minmax(0, 0.9fr) minmax(0, 1.3fr) minmax(0, 1.15fr) minmax(0, 0.95fr) minmax(0, 1fr); }
-  .track-name { display: grid; place-items: center; font: 600 13px/1 var(--font); color: var(--clip-video); border-right: 1px solid var(--line); }
-  .clip {
-    margin: 10px 4px; padding: 14px 14px 16px;
-    background: var(--clip-video-fill); border: 1px solid var(--clip-video); border-radius: 3px;
-    display: grid; gap: 8px; align-content: start;
-  }
-  .clip p { font-size: 15px; line-height: 1.5; color: var(--ink-2); }
-  .playhead { position: absolute; top: 0; bottom: 0; left: 52px; width: 2px; background: var(--accent); pointer-events: none; }
-  .playhead::before {
-    content: ''; position: absolute; top: 0; left: -5px;
-    border: 6px solid transparent; border-top: 8px solid var(--accent);
-  }
-  .timeline-wrap { position: relative; }
-
-  /* editions */
-  table { width: 100%; min-width: 560px; border-collapse: collapse; table-layout: fixed; font-size: 16px; }
-  th, td { text-align: left; padding: 16px 18px; border-bottom: 1px solid var(--line); vertical-align: top; }
-  thead th { font-weight: 640; font-size: 19px; font-stretch: 85%; border-bottom-color: var(--ink-3); }
-  thead th small { display: block; font-weight: 400; font-size: 15px; color: var(--ink-3); font-stretch: 100%; }
-  tbody th { font-weight: 500; color: var(--ink-2); width: 32%; }
-  td.no { color: var(--ink-3); }
+  /* tables */
   .table-box { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); overflow-x: auto; }
-  .table-box tr:last-child > * { border-bottom: 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 16px; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: 15px 18px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  thead th { font-weight: 600; color: var(--ink-2); font-size: 15px; border-bottom-color: var(--line-strong); }
+  .table-box tbody tr:last-child > * { border-bottom: 0; }
+  .bench { min-width: 640px; }
+  .editions { min-width: 640px; table-layout: fixed; }
+  .editions thead th { color: var(--ink); font-size: 20px; font-stretch: 85%; }
+  .editions thead th small { display: block; font-weight: 400; font-size: 15px; color: var(--ink-3); font-stretch: 100%; }
+  .editions tbody th { font-weight: 500; color: var(--ink-2); width: 31%; }
+  td.no { color: var(--ink-3); }
+  .tag { display: inline-block; margin-left: 6px; padding: 1px 8px; border: 1px solid var(--line-strong); border-radius: 999px; font-size: 13px; font-weight: 500; color: var(--ink-2); vertical-align: 2px; white-space: nowrap; }
 
-  /* install: a real sequence, so it is numbered */
-  .steps { margin: 0; padding: 0; list-style: none; counter-reset: step; display: grid; gap: 18px; max-width: 46em; }
-  .steps li { counter-increment: step; display: grid; grid-template-columns: 40px 1fr; gap: 14px; align-items: start; }
-  .steps li::before {
-    content: counter(step); display: grid; place-items: center;
-    width: 32px; height: 32px; border-radius: 50%;
-    border: 1px solid var(--line); background: var(--panel);
-    font-weight: 600; font-size: 15px; color: var(--ink-2);
+  /* how it works: a real sequence, so the steps are numbered */
+  .steps { margin: 0; padding: 0; list-style: none; counter-reset: step; display: grid; gap: clamp(48px, 6vw, 80px); }
+  .step { counter-increment: step; display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: 24px clamp(28px, 4vw, 56px); align-items: start; }
+  .step-text { display: grid; gap: 12px; padding-top: 8px; }
+  .step-text::before { content: counter(step); font: 620 56px/0.9 var(--font); font-stretch: 75%; color: var(--accent); }
+  .step-text h3 { font-size: 24px; }
+  .step-text p { color: var(--ink-2); }
+  .shot { display: block; border-radius: 10px; overflow: hidden; border: 1px solid var(--line-strong); background: var(--panel); }
+  .shot img { width: 100%; height: auto; }
+  .shot.narrow { max-width: 560px; }
+
+  /* features */
+  .features { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 clamp(24px, 3vw, 40px); margin: 0; padding: 0; list-style: none; }
+  .features li { border-top: 1px solid var(--line); padding-block: 20px 26px; display: grid; gap: 6px; align-content: start; }
+  .features p { color: var(--ink-2); font-size: 16px; }
+  .features.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+  /* requirements */
+  .reqs { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+  .reqs dl { margin: 0; }
+  .reqs .head, .reqs dl > div { display: grid; grid-template-columns: minmax(0, 2.4fr) minmax(0, 3.6fr) minmax(0, 6fr); gap: 6px 24px; padding: 18px 20px; border-top: 1px solid var(--line); }
+  .reqs .head { border-top: 0; }
+  .reqs dt { font-weight: 600; }
+  .reqs dd { margin: 0; color: var(--ink-2); }
+  .reqs dd.tested { color: var(--ink); }
+  .reqs .lab { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .reqs .head { color: var(--ink-3); font-size: 15px; padding-block: 12px; }
+  .pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+  .pair > div { border: 1px solid var(--line); border-radius: 10px; padding: 22px 24px; display: grid; gap: 10px; align-content: start; }
+  .pair ul { margin: 0; padding-left: 1.1em; color: var(--ink-2); display: grid; gap: 6px; }
+  .howto { margin: 0; padding: 0; list-style: none; counter-reset: howto; display: grid; gap: 16px; max-width: 52em; }
+  .howto li { counter-increment: howto; display: grid; grid-template-columns: 36px 1fr; gap: 14px; color: var(--ink-2); }
+  .howto li::before { content: counter(howto); display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--line-strong); font-weight: 600; font-size: 15px; color: var(--ink); }
+  .howto code { color: var(--ink); overflow-wrap: anywhere; }
+
+  /* download and trust */
+  .get { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 20px; align-items: start; }
+  .card { border: 1px solid var(--line); border-radius: 12px; background: var(--panel); padding: clamp(22px, 3vw, 32px); display: grid; gap: 18px; align-content: start; }
+  .card.main { border-color: var(--line-strong); }
+  .facts { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 8px 20px; font-size: 16px; }
+  .facts dt { color: var(--ink-3); }
+  .facts dd { margin: 0; }
+  .links { display: flex; flex-wrap: wrap; gap: 8px 22px; font-size: 16px; }
+  .code { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; }
+  .code code { flex: 1; min-width: 0; color: var(--ink); overflow-wrap: anywhere; font-size: 13px; line-height: 1.5; }
+  .copy { flex: none; min-height: 40px; padding: 0 14px; border-radius: 7px; border: 1px solid var(--line-strong); background: var(--raised); color: var(--ink); font: 500 14px/1 var(--font); cursor: pointer; }
+  .copy:hover { border-color: var(--ink-3); }
+  .card p { color: var(--ink-2); }
+  .net { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 clamp(24px, 3vw, 40px); }
+  .net li { border-top: 1px solid var(--line); padding-block: 18px 22px; display: grid; gap: 6px; align-content: start; }
+  .net p { color: var(--ink-2); font-size: 16px; }
+
+  /* FAQ */
+  .faq { display: grid; max-width: 52em; border-bottom: 1px solid var(--line); }
+  .faq details { border-top: 1px solid var(--line); }
+  .faq summary { cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 20px 0; font-size: 19px; font-weight: 600; }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary::after { content: '+'; flex: none; width: 28px; text-align: center; font-weight: 400; font-size: 24px; color: var(--ink-3); transition: transform 160ms ease-out; }
+  .faq details[open] summary::after { transform: rotate(45deg); }
+  .faq details > div { padding: 0 0 22px; display: grid; gap: 10px; color: var(--ink-2); max-width: 44em; }
+
+  footer { border-top: 1px solid var(--line); padding-block: 40px 56px; display: grid; gap: 14px; }
+  footer .links { color: var(--ink-2); }
+
+  @media (max-width: 1080px) {
+    .nav { display: none; }
+    .menu { display: block; }
   }
-  .steps h3 { margin-bottom: 4px; }
-  .steps p { color: var(--ink-2); }
-  .needs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
-  .needs > div { border: 1px solid var(--line); border-radius: 10px; padding: 20px 22px; background: var(--panel); display: grid; gap: 8px; align-content: start; }
-  .needs ul { margin: 0; padding-left: 1.1em; color: var(--ink-2); display: grid; gap: 4px; }
-
-  .final { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 24px; }
-
-  footer { border-top: 1px solid var(--line); padding-block: 36px 48px; display: grid; gap: 10px; }
-  .hash { word-break: break-all; color: var(--ink-2); }
-
-  @media (max-width: 960px) {
-    .hero { grid-template-columns: 1fr; }
-    .viewfinder { order: -1; }
+  @media (max-width: 900px) {
+    .hero-head, .step, .get { grid-template-columns: minmax(0, 1fr); }
+    .clips, .features, .features.four { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .reqs dl > div { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); }
+    .reqs dd:last-child { grid-column: 2; }
+    .reqs .head { display: none; }
+    .reqs dl > div:first-child { border-top: 0; }
+    .reqs .lab { position: static; width: auto; height: auto; clip-path: none; color: var(--ink-3); }
   }
-  @media (max-width: 760px) {
+  @media (max-width: 640px) {
     body { font-size: 16px; }
-    .top nav a:not(.keep) { display: none; }
-    .ruler { display: none; }
-    .track { grid-template-columns: 1fr; padding: 8px; }
-    .track-name, .playhead { display: none; }
-    .clip { margin: 6px 0; }
-    .needs { grid-template-columns: 1fr; }
-    th, td { padding: 12px; }
+    .bar .btn.sm { display: none; }
+    .clips, .features, .features.four, .pair, .net { grid-template-columns: minmax(0, 1fr); }
+    .reqs dl > div { grid-template-columns: minmax(0, 1fr); }
+    .reqs dd:last-child { grid-column: auto; }
+    .actions .btn { flex: 1 1 100%; }
+    th, td { padding: 12px 14px; }
+    .code { flex-wrap: wrap; }
   }
   @media (prefers-reduced-motion: reduce) {
-    .btn { transition: none; }
+    .btn, .faq summary::after { transition: none; }
   }
 </style>
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
 
-<div class="wrap">
-  <header class="top">
+<svg style="display: none">
+  <symbol id="corner" viewBox="0 0 48 48"><path fill="currentColor" d="M4.2 46.5C3.1 33.9 3.4 18.6 5.6 7.9 6.4 5.4 8.3 4.6 11.4 4.4 22.6 3.6 33.9 3.7 45.1 5.2c1.9.4 2.3 2.6.6 3.9-1.4.9-3.3 1.4-5.6 1.5-8.5.3-16.6.8-24.7 2.3-1.8.4-2.4 1.6-2.6 3.6-.6 9.3-.5 18.9-.9 28.6-.2 1.9-1.6 3-3.6 3-1.9 0-3.4-.6-3.5-1.6Z"/></symbol>
+  <symbol id="download" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></g></symbol>
+</svg>
+
+<header class="bar">
+  <div class="wrap">
     <a class="brand" href="./" title="ネギ">
-      <picture>
-        <source srcset="assets/mark-light.png" media="(prefers-color-scheme: light)">
-        <img src="assets/mark-dark.png" alt="" width="32" height="32">
-      </picture>
+      <img src="assets/mark-dark.png" alt="" width="30" height="30">
       Negi
     </a>
-    <nav aria-label="Page">
+    <nav class="nav" aria-label="Main">
+      <a href="#features">Features</a>
       <a href="#how">How it works</a>
+      <a href="#requirements">Requirements</a>
       <a href="#editions">Editions</a>
-      <a class="keep" href="#install">Install</a>
+      <a href="#faq">FAQ</a>
+      <a href="https://github.com/Mustihaft/negi">GitHub</a>
     </nav>
-  </header>
-</div>
+    <details class="menu">
+      <summary>Menu</summary>
+      <nav aria-label="Main">
+        <a href="#features">Features</a>
+        <a href="#how">How it works</a>
+        <a href="#requirements">Requirements</a>
+        <a href="#editions">Editions</a>
+        <a href="#faq">FAQ</a>
+        <a href="#download">Download</a>
+        <a href="https://github.com/Mustihaft/negi">GitHub</a>
+      </nav>
+    </details>
+    <a class="btn sm" href="#download">Download</a>
+  </div>
+</header>
 
 <main id="main">
-  <div class="wrap">
-    <section class="hero" aria-labelledby="title">
-      <div class="hero-text">
-        <h1 id="title">Make AI video on your own PC.</h1>
-        <p class="lede">Negi turns an idea into a finished video. It writes the script with a local language model, generates every scene with open video models on your graphics card, and gives you a timeline to cut it together. Your projects stay on your computer.</p>
+  <section class="wrap hero" aria-labelledby="title">
+    <div class="hero-head">
+      <h1 id="title">Turn an idea into a finished video, on your own PC.</h1>
+      <div class="hero-side">
+        <p class="lede">Negi is a Windows app for making AI video. A language model drafts the script and scenes, an open video model renders each scene on your graphics card, and a timeline editor cuts it all together. Your projects stay on your computer.</p>
         <div class="actions">
-          <a class="btn" data-dl href="https://github.com/Mustihaft/negi/releases/download/v0.1.6/AI-Video-Studio-Setup-0.1.6-x64.exe">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+          <a class="btn" data-dl href="https://github.com/Mustihaft/negi/releases/download/v0.1.7/Negi-Setup-0.1.7-x64.exe">
+            <svg aria-hidden="true"><use href="#download"/></svg>
             Download for Windows
           </a>
-          <a class="link" href="https://github.com/Mustihaft/negi/releases">Other versions</a>
+          <a class="btn quiet" href="#how">See how it works</a>
         </div>
-        <p class="meta">Version <span data-version>0.1.6</span>, <span data-size>175 MB</span>. Windows 10 and 11, 64-bit.</p>
+        <p class="meta">Free Community edition. Version <span data-version>0.1.7</span>, <span data-size>175 MB</span>, for Windows 10 and 11 (64-bit). The installer isn't code-signed yet, so <a class="link" href="#verify">check your download</a>.</p>
       </div>
+    </div>
 
-      <figure class="viewfinder">
-        <div class="frame">
-          <div class="media">
+    <figure class="stage">
+      <div class="frame">
+        <div class="window">
+          <img src="assets/editor-dark.webp" width="1480" height="900" fetchpriority="high" alt="The Negi editor: a media library with generated clips and music, the program monitor, clip settings, and a timeline with two video tracks and an audio track.">
+          <div class="monitor">
             <video data-hero muted loop playsinline preload="metadata" poster="assets/anime-loop.webp" src="assets/anime-loop.mp4" aria-label="An anime girl with long turquoise hair and cherry blossom petals in the wind at sunset, generated by Negi"></video>
           </div>
-          <svg class="corner tl" viewBox="0 0 48 48" aria-hidden="true"><path fill="currentColor" d="M4.2 46.5C3.1 33.9 3.4 18.6 5.6 7.9 6.4 5.4 8.3 4.6 11.4 4.4 22.6 3.6 33.9 3.7 45.1 5.2c1.9.4 2.3 2.6.6 3.9-1.4.9-3.3 1.4-5.6 1.5-8.5.3-16.6.8-24.7 2.3-1.8.4-2.4 1.6-2.6 3.6-.6 9.3-.5 18.9-.9 28.6-.2 1.9-1.6 3-3.6 3-1.9 0-3.4-.6-3.5-1.6Z"/></svg>
-          <svg class="corner tr" viewBox="0 0 48 48" aria-hidden="true"><path fill="currentColor" d="M4.2 46.5C3.1 33.9 3.4 18.6 5.6 7.9 6.4 5.4 8.3 4.6 11.4 4.4 22.6 3.6 33.9 3.7 45.1 5.2c1.9.4 2.3 2.6.6 3.9-1.4.9-3.3 1.4-5.6 1.5-8.5.3-16.6.8-24.7 2.3-1.8.4-2.4 1.6-2.6 3.6-.6 9.3-.5 18.9-.9 28.6-.2 1.9-1.6 3-3.6 3-1.9 0-3.4-.6-3.5-1.6Z"/></svg>
-          <svg class="corner bl" viewBox="0 0 48 48" aria-hidden="true"><path fill="currentColor" d="M4.2 46.5C3.1 33.9 3.4 18.6 5.6 7.9 6.4 5.4 8.3 4.6 11.4 4.4 22.6 3.6 33.9 3.7 45.1 5.2c1.9.4 2.3 2.6.6 3.9-1.4.9-3.3 1.4-5.6 1.5-8.5.3-16.6.8-24.7 2.3-1.8.4-2.4 1.6-2.6 3.6-.6 9.3-.5 18.9-.9 28.6-.2 1.9-1.6 3-3.6 3-1.9 0-3.4-.6-3.5-1.6Z"/></svg>
-          <svg class="corner br" viewBox="0 0 48 48" aria-hidden="true"><path fill="currentColor" d="M4.2 46.5C3.1 33.9 3.4 18.6 5.6 7.9 6.4 5.4 8.3 4.6 11.4 4.4 22.6 3.6 33.9 3.7 45.1 5.2c1.9.4 2.3 2.6.6 3.9-1.4.9-3.3 1.4-5.6 1.5-8.5.3-16.6.8-24.7 2.3-1.8.4-2.4 1.6-2.6 3.6-.6 9.3-.5 18.9-.9 28.6-.2 1.9-1.6 3-3.6 3-1.9 0-3.4-.6-3.5-1.6Z"/></svg>
         </div>
-        <figcaption class="small" data-hero-caption>Generated with Negi on a GeForce RTX 3060 Ti in 4 min 39 s: Wan 2.1 (1.3B), 832 × 480, 49 frames, looped with a crossfade.</figcaption>
-      </figure>
-    </section>
-  </div>
-
-  <section class="wrap block" aria-labelledby="editor-title">
-    <header>
-      <h2 id="editor-title">A real editor, not a prompt box.</h2>
-      <p class="lede">Generated clips land in your media library next to your own footage, images and music. Arrange them on video and audio tracks, add titles, fades and cross-dissolves, and step back with undo whenever you like.</p>
-    </header>
-    <figure class="shot">
-      <picture>
-        <source srcset="assets/editor-light.webp" media="(prefers-color-scheme: light)">
-        <img src="assets/editor-dark.webp" alt="The Negi editor: media library, program monitor showing the fox clip, clip settings, and a timeline with a video track, a title and a music track." width="1480" height="900" loading="lazy">
-      </picture>
-      <figcaption class="small">The editor with the fox clip, a title and a music bed.</figcaption>
+        <svg class="corner tl" viewBox="0 0 48 48" aria-hidden="true"><use href="#corner"/></svg>
+        <svg class="corner tr" viewBox="0 0 48 48" aria-hidden="true"><use href="#corner"/></svg>
+        <svg class="corner bl" viewBox="0 0 48 48" aria-hidden="true"><use href="#corner"/></svg>
+        <svg class="corner br" viewBox="0 0 48 48" aria-hidden="true"><use href="#corner"/></svg>
+      </div>
+      <figcaption class="small">A screenshot of Negi 0.1.7. The program monitor plays a clip generated with Negi, <span data-hero-caption>in 4 min 39 s on a GeForce RTX 3060 Ti (Wan 2.1 1.3B, 832 × 480, 49 frames, looped with a crossfade)</span>.</figcaption>
     </figure>
+  </section>
+
+  <section class="wrap block" id="examples" aria-labelledby="examples-title">
+    <header>
+      <h2 id="examples-title">Made on one 8 GB graphics card.</h2>
+      <p class="lede">These clips came out of Negi on a GeForce RTX 3060 Ti with the open Wan 2.1 text-to-video model. They're shown as generated, only looped for this page.</p>
+    </header>
+    <div class="clips">
+      <figure>
+        <video data-clip muted loop playsinline preload="none" poster="assets/anime-loop.webp" src="assets/anime-loop.mp4" width="832" height="480" aria-label="An anime girl with long turquoise hair and cherry blossom petals in the wind at sunset"></video>
+        <figcaption><b>Cherry blossoms at sunset</b>Generated in 4 min 39 s</figcaption>
+      </figure>
+      <figure>
+        <video data-clip muted loop playsinline preload="none" poster="assets/catgirl-loop.webp" src="assets/catgirl-loop.mp4" width="832" height="480" aria-label="An anime cat girl with silver hair watching the rain from a window at night"></video>
+        <figcaption><b>Rain at the window</b>Generated in 4 min 57 s</figcaption>
+      </figure>
+      <figure>
+        <video data-clip muted loop playsinline preload="none" poster="assets/fox-loop.webp" src="assets/fox-loop.mp4" width="832" height="480" aria-label="A red fox sitting in falling snow in a pine forest"></video>
+        <figcaption><b>Fox in the snow</b>Generated in 5 min 17 s</figcaption>
+      </figure>
+    </div>
+    <div class="group">
+      <h3>Measured generation times</h3>
+      <div class="table-box" role="region" aria-label="Measured generation times" tabindex="0">
+        <table class="bench">
+          <thead>
+            <tr><th scope="col">Size</th><th scope="col">Length at 16 fps</th><th scope="col">Steps</th><th scope="col">Time</th><th scope="col">Peak GPU memory</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>480 × 272</td><td>17 frames, 1 s</td><td>20</td><td>17 s, models already loaded</td><td>7.3 of 8 GB</td></tr>
+            <tr><td>832 × 480</td><td>33 frames, 2 s</td><td>30</td><td>2 min 42 s</td><td>7.5 of 8 GB</td></tr>
+            <tr><td>832 × 480</td><td>49 frames, 3 s</td><td>30</td><td>4 min 39 s to 5 min 17 s, three clips</td><td>7.3 to 7.5 of 8 GB</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">Measured on Windows 11 with a GeForce RTX 3060 Ti (8 GB), 64 GB of memory, ComfyUI 0.39.0 and Wan 2.1 text-to-video 1.3B (fp16). Each time is one run, from sending the job to the finished file, and includes loading the models unless noted. Peak GPU memory is for the whole card, including what Windows uses. Your times will differ with your graphics card, model, size, length and steps.</p>
+    </div>
   </section>
 
   <section class="wrap block" id="how" aria-labelledby="how-title">
     <header>
-      <h2 id="how-title">From idea to published video.</h2>
+      <h2 id="how-title">How it works</h2>
+      <p class="lede">Four steps from an idea to a video file. Every picture here is a screenshot of Negi; open one to see it full size.</p>
     </header>
-    <div class="timeline-wrap">
-      <div class="timeline">
-        <div class="ruler" aria-hidden="true"><span></span><span>00:00:00</span><span>00:00:05</span><span>00:00:10</span><span>00:00:15</span><span>00:00:20</span></div>
-        <ol class="track" aria-label="Steps">
-          <li class="track-name" aria-hidden="true">V1</li>
-          <li class="clip"><h3>Write</h3><p>Turn an idea into a script and scenes with a local model in Ollama or LM Studio, or any OpenAI-compatible service.</p></li>
-          <li class="clip"><h3>Generate</h3><p>Each scene becomes a clip through ComfyUI on your graphics card. Wan 2.1 comes set up and tested.</p></li>
-          <li class="clip"><h3>Edit</h3><p>Trim, split and arrange clips on as many tracks as you need, with titles, fades and cross-dissolves.</p></li>
-          <li class="clip"><h3>Export</h3><p>Render H.264, H.265, VP9 or ProRes. Every file is checked before it is saved. FFmpeg is included.</p></li>
-          <li class="clip"><h3>Publish</h3><p>Post to YouTube, Mastodon, Bluesky, Telegram or Discord, right away or on a schedule.</p></li>
-        </ol>
-        <div class="playhead" aria-hidden="true"></div>
+    <ol class="steps">
+      <li class="step">
+        <div class="step-text">
+          <h3>Write the script</h3>
+          <p>Describe your idea. A language model writes a script and splits it into scenes, each with a shot prompt you can edit before anything is generated. This script came from qwen2.5-coder 7B running in Ollama on the same PC. You can also write everything yourself.</p>
+        </div>
+        <a class="shot" href="assets/storyboard-dark.webp"><img src="assets/storyboard-dark.webp" width="1480" height="900" loading="lazy" alt="The Storyboard view: the concept, the local Ollama model, the written script, and the scenes it planned, each with a shot prompt, things to avoid and a length."></a>
+      </li>
+      <li class="step">
+        <div class="step-text">
+          <h3>Generate the scenes</h3>
+          <p>Send a scene, or your own prompt, to ComfyUI on your PC. Negi shows which models are ready, follows the progress and adds the finished clip to your project.</p>
+        </div>
+        <a class="shot" href="assets/generate-dark.webp"><img src="assets/generate-dark.webp" width="1480" height="900" loading="lazy" alt="The Generate view: Wan 2.1 text-to-video marked Ready, the prompt, size and length settings, and the finished clip ready to add to the timeline."></a>
+      </li>
+      <li class="step">
+        <div class="step-text">
+          <h3>Edit on a timeline</h3>
+          <p>Arrange the clips with your own footage, images and music on as many video and audio tracks as you need. Trim, split, add titles, fades and cross-dissolves, and undo anything. The monitor gives a quick preview; the exported file is the exact result.</p>
+        </div>
+        <a class="shot" href="assets/editor-dark.webp"><img src="assets/timeline-dark.webp" width="1252" height="282" loading="lazy" alt="The timeline: two generated clips on the first video track, a title on the second, and a music track."></a>
+      </li>
+      <li class="step">
+        <div class="step-text">
+          <h3>Export</h3>
+          <p>Render MP4 (H.264 or H.265), WebM (VP9) or ProRes. Negi checks every file with FFmpeg before it saves it, so a failed render never replaces a good one.</p>
+        </div>
+        <a class="shot narrow" href="assets/export-dark.webp"><img src="assets/export-crop-dark.webp" width="560" height="560" loading="lazy" alt="The Export video dialog with format, resolution, frame rate, quality, encoding speed and destination."></a>
+      </li>
+    </ol>
+  </section>
+
+  <section class="wrap block" id="features" aria-labelledby="features-title">
+    <header>
+      <h2 id="features-title">What Negi does today</h2>
+      <p class="lede">Everything in the first list is tested end to end on Windows. Items marked Preview are built, but so far only tested against simulated services.</p>
+    </header>
+    <ul class="features">
+      <li><h3>Script and scenes from an idea</h3><p>A language model drafts the script and the shot list. Tested with Ollama on the same PC.</p></li>
+      <li><h3>Video generation on your PC</h3><p>Scenes render through ComfyUI on your graphics card. Wan 2.1 text-to-video comes as a ready, tested template.</p></li>
+      <li><h3>A multi-track editor</h3><p>Video and audio tracks, trim and split, titles, fades, cross-dissolves, clip volume and undo.</p></li>
+      <li><h3>Your own media</h3><p>Import video, images and audio. Every file is checked with FFmpeg before it's added.</p></li>
+      <li><h3>Checked exports</h3><p>H.264, H.265, VP9 and ProRes, verified before saving. FFmpeg comes with the installer.</p></li>
+      <li><h3>Work that's safe</h3><p>Projects save as you go and keep snapshots. Generations and exports run as jobs you can follow and cancel.</p></li>
+    </ul>
+    <div class="group">
+      <h3>In preview</h3>
+      <ul class="features four">
+        <li><h4>Publish and schedule <span class="tag">Preview</span></h4><p>YouTube, Mastodon, Bluesky, Telegram and Discord, with your own accounts. YouTube needs your own Google API project.</p></li>
+        <li><h4>Analytics and comment inbox <span class="tag">Preview</span></h4><p>Views and comments from connected accounts, with replies you approve.</p></li>
+        <li><h4>More model services <span class="tag">Preview</span></h4><p>LM Studio and cloud language models through the OpenAI-compatible connection.</p></li>
+        <li><h4>Image to video <span class="tag">Preview</span></h4><p>A Wan 2.2 template is included but untested. It shows as unavailable until that model is installed.</p></li>
+      </ul>
+      <p class="note">Not available yet: macOS and Linux versions, a code-signed installer, and automatic updates. Negi doesn't update itself; new versions are published on this page.</p>
+    </div>
+  </section>
+
+  <section class="wrap block" id="requirements" aria-labelledby="requirements-title">
+    <header>
+      <h2 id="requirements-title">What you need</h2>
+      <p class="lede">Editing and export need only Windows. Generating video on your own PC is what needs a graphics card and about 16 GB more disk space.</p>
+    </header>
+    <div class="reqs">
+      <div class="head" aria-hidden="true"><span></span><span>Tested setup</span><span>What to know</span></div>
+      <dl>
+      <div><dt>Windows</dt><dd class="tested"><span class="lab">Tested setup: </span>Windows 11, 64-bit</dd><dd>Built for Windows 10 and 11, 64-bit.</dd></div>
+      <div><dt>Graphics card</dt><dd class="tested"><span class="lab">Tested setup: </span>NVIDIA GeForce RTX 3060 Ti, 8 GB</dd><dd>Only needed to generate video on your PC. Wan 2.1 used up to 7.5 GB of it. Other cards haven't been tested yet.</dd></div>
+      <div><dt>Memory</dt><dd class="tested"><span class="lab">Tested setup: </span>64 GB</dd><dd>The minimum hasn't been measured yet.</dd></div>
+      <div><dt>Disk space</dt><dd class="tested"><span class="lab">Tested setup: </span>About 600 MB for Negi</dd><dd>Plus about 6 GB for ComfyUI and 9.2 GB for the Wan 2.1 models. A local language model adds about 5 GB. Projects grow with your media.</dd></div>
+      <div><dt>Internet</dt><dd class="tested"><span class="lab">Tested setup: </span>Optional</dd><dd>Not needed to edit, export or generate with local models. Only for downloads, cloud model services, publishing, and checking a paid license.</dd></div>
+      </dl>
+    </div>
+    <p class="note">The tested setup is the only one we can vouch for. Minimum and recommended specs will be listed once they've been measured.</p>
+
+    <div class="pair">
+      <div>
+        <h3>In the installer</h3>
+        <ul>
+          <li>Negi itself</li>
+          <li>FFmpeg 9.0.2, for checking media and exporting</li>
+          <li>ComfyUI templates for Wan 2.1 text-to-video and Wan 2.2 image-to-video</li>
+        </ul>
       </div>
+      <div>
+        <h3>You add, for local video</h3>
+        <ul>
+          <li>ComfyUI portable for NVIDIA: about 2 GB to download, 6 GB unpacked</li>
+          <li>The Wan 2.1 models: 9.2 GB</li>
+          <li>Optional: Ollama with a model such as qwen2.5-coder 7B (4.7 GB), LM Studio, or a cloud service</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="group">
+      <h3>Set up video generation</h3>
+      <ol class="howto">
+        <li><p>Download ComfyUI portable for NVIDIA from <a class="link" href="https://github.com/Comfy-Org/ComfyUI/releases">ComfyUI's releases on GitHub</a> and unpack it with 7-Zip.</p></li>
+        <li><p>From <a class="link" href="https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/tree/main/split_files">Comfy-Org's Wan 2.1 files on Hugging Face</a>, put <code>wan2.1_t2v_1.3B_fp16.safetensors</code> in <code>ComfyUI\models\diffusion_models</code>, <code>umt5_xxl_fp8_e4m3fn_scaled.safetensors</code> in <code>ComfyUI\models\text_encoders</code> and <code>wan_2.1_vae.safetensors</code> in <code>ComfyUI\models\vae</code>.</p></li>
+        <li><p>Start ComfyUI with <code>run_nvidia_gpu.bat</code> and leave it running.</p></li>
+        <li><p>In Negi, open <b>Models &amp; providers</b>, add <b>ComfyUI on this computer</b> and test it. Wan 2.1 then shows as Ready on the Generate page.</p></li>
+      </ol>
     </div>
   </section>
 
   <section class="wrap block" id="editions" aria-labelledby="editions-title">
     <header>
       <h2 id="editions-title">Editions</h2>
-      <p class="lede">Everything you need to make a video is free. Paid editions add higher export resolutions and publishing.</p>
+      <p class="lede">Everything you need to make a video is free. Creator and Studio add higher export resolutions and publishing.</p>
     </header>
-    <div class="table-box">
-      <table>
+    <div class="table-box" role="region" aria-label="Editions" tabindex="0">
+      <table class="editions">
         <thead>
           <tr>
             <td></td>
@@ -322,79 +474,161 @@
         <tbody>
           <tr><th scope="row">Write, generate and edit</th><td>Included</td><td>Included</td><td>Included</td></tr>
           <tr><th scope="row">Export resolution</th><td>Up to 480p</td><td>Up to 1080p</td><td>Up to 4K</td></tr>
-          <tr><th scope="row">Publish and schedule posts</th><td class="no">Prepares files to post yourself</td><td>Included</td><td>Included</td></tr>
-          <tr><th scope="row">Analytics and comment inbox</th><td class="no">Not included</td><td class="no">Not included</td><td>Included</td></tr>
+          <tr><th scope="row">Publish and schedule <span class="tag">Preview</span></th><td class="no">Prepares files for you to post</td><td>Included</td><td>Included</td></tr>
+          <tr><th scope="row">Analytics and comment inbox <span class="tag">Preview</span></th><td class="no">Not included</td><td class="no">Not included</td><td>Included</td></tr>
         </tbody>
       </table>
     </div>
-    <p class="small">For a Creator or Studio activation key, email <a class="link" href="mailto:mustafa123.my53@gmail.com?subject=AI%20Video%20Studio%20activation%20key">mustafa123.my53@gmail.com</a>. Enter the key on the app's License page, or keep using Community. Your projects never depend on a license.</p>
+    <p class="note">For a Creator or Studio activation key, email <a class="link" href="mailto:mustafa123.my53@gmail.com?subject=Negi%20activation%20key">mustafa123.my53@gmail.com</a> and enter the key on Negi's License page. Without a key Negi runs as Community, and your projects open in every edition.</p>
   </section>
 
-  <section class="wrap block" id="install" aria-labelledby="install-title">
+  <section class="wrap block" id="download" aria-labelledby="download-title">
     <header>
-      <h2 id="install-title">Install</h2>
+      <h2 id="download-title">Download Negi</h2>
     </header>
-    <ol class="steps">
-      <li><div><h3>Download the installer</h3><p>About <span data-size>175 MB</span>. It installs for your Windows user only and needs no administrator rights.</p></div></li>
-      <li><div><h3>Get past the SmartScreen warning</h3><p>The installer is not code-signed yet, so Windows may show “Windows protected your PC”. Choose <b>More info</b>, then <b>Run anyway</b>.</p></div></li>
-      <li><div><h3>Start Negi</h3><p>Enter an activation key, or continue with the free Community edition.</p></div></li>
-    </ol>
-    <div class="needs">
-      <div>
-        <h3>To run the app</h3>
-        <ul>
-          <li>Windows 10 or 11, 64-bit</li>
-          <li>Editing and export work on any recent PC</li>
-        </ul>
+    <div class="get">
+      <div class="card main">
+        <dl class="facts">
+          <dt>Version</dt><dd data-version>0.1.7</dd>
+          <dt>Released</dt><dd data-date>28 October 2026</dd>
+          <dt>Size</dt><dd data-size>175 MB</dd>
+          <dt>System</dt><dd>Windows 10 and 11, 64-bit</dd>
+        </dl>
+        <a class="btn" data-dl href="https://github.com/Mustihaft/negi/releases/download/v0.1.7/Negi-Setup-0.1.7-x64.exe">
+          <svg aria-hidden="true"><use href="#download"/></svg>
+          Download for Windows
+        </a>
+        <div class="links">
+          <a class="link" data-notes href="https://github.com/Mustihaft/negi/releases/tag/v0.1.7">Release notes</a>
+          <a class="link" href="https://github.com/Mustihaft/negi/releases">All versions</a>
+        </div>
+        <p class="small">Negi installs for your Windows user only and needs no administrator rights. Remove it any time under Settings, Apps, Installed apps.</p>
       </div>
-      <div>
-        <h3>To generate video on your PC</h3>
-        <ul>
-          <li>An NVIDIA graphics card with about 8 GB of memory (tested on an RTX 3060 Ti)</li>
-          <li>ComfyUI with the Wan 2.1 models, about 9 GB to download. Connect it under Models &amp; providers.</li>
-        </ul>
+      <div class="card" id="verify">
+        <h3>Check the file before you run it</h3>
+        <p>GitHub records a SHA-256 checksum for the installer. After downloading, run this in PowerShell and compare the result with the checksum below. Every character must match; upper or lower case doesn't matter.</p>
+        <div class="code"><code>Get-FileHash "$env:USERPROFILE\Downloads\<span data-file>Negi-Setup-0.1.7-x64.exe</span>"</code></div>
+        <div class="code"><code data-sha>000aeb1b6cbcfa77ad714da384ebae180d76c8bc564d0769a89350cda282bdae</code><button class="copy" type="button" data-copy>Copy</button></div>
+        <p>A matching checksum shows the file arrived intact and is the one published on this project's GitHub release. It can't tell you who built it; that's what code signing is for.</p>
+        <h3>About the Windows SmartScreen warning</h3>
+        <p>The installer isn't code-signed yet, so Windows can't name its publisher and will probably show “Windows protected your PC”. That warning means the file is unknown to Windows. It isn't a malware finding, and nothing on this page can prove the file is safe. Only continue if the checksum matches and you trust this project: choose <b>More info</b>, check that the app is <b data-file>Negi-Setup-0.1.7-x64.exe</b>, then <b>Run anyway</b>. If you're unsure, don't run it.</p>
       </div>
     </div>
-    <div class="final">
-      <a class="btn" data-dl href="https://github.com/Mustihaft/negi/releases/download/v0.1.6/AI-Video-Studio-Setup-0.1.6-x64.exe">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
-        Download for Windows
-      </a>
-      <p class="meta">Version <span data-version>0.1.6</span></p>
+
+    <div class="group">
+      <h3>What Negi sends over the internet</h3>
+      <ul class="net">
+        <li><h4>Nothing by default</h4><p>The app has no telemetry, analytics or ads. Editing, export and local generation don't use the internet.</p></li>
+        <li><h4>Model services you add</h4><p>Ollama, LM Studio and ComfyUI on your PC stay on your PC. A cloud service you add receives the prompts and scripts you send it, and every AI action shows where it goes.</p></li>
+        <li><h4>Platforms you publish to</h4><p>Your video and post text go to the accounts you connect, only when you publish.</p></li>
+        <li><h4>License check-ins, with a paid key only</h4><p>Your activation key, a random installation ID, a one-time number and the app version. Never projects, prompts or media. Paid features keep working offline for 7 days by default after the last check-in.</p></li>
+      </ul>
+      <p class="note">This website has no analytics and sets no cookies. Your browser loads the latest release details from GitHub, which hosts the page and the downloads.</p>
+    </div>
+  </section>
+
+  <section class="wrap block" id="faq" aria-labelledby="faq-title">
+    <header>
+      <h2 id="faq-title">Questions</h2>
+    </header>
+    <div class="faq">
+      <details>
+        <summary>Does Negi run on my computer or in the cloud?</summary>
+        <div><p>On your computer. Editing and export happen in the app, and video generation runs in ComfyUI on your own graphics card. For writing scripts you choose: a local model in Ollama, or a cloud service you add yourself.</p></div>
+      </details>
+      <details>
+        <summary>Does it need an internet connection?</summary>
+        <div><p>Not to edit, export or generate with local models once they're downloaded. You need a connection to download models, use a cloud service, publish, and to check a Creator or Studio key, which keeps working offline for 7 days by default.</p></div>
+      </details>
+      <details>
+        <summary>Which graphics card do I need?</summary>
+        <div><p>Generating video was tested on an NVIDIA GeForce RTX 3060 Ti with 8 GB, and Wan 2.1 1.3B is made for cards of about that size. Other cards haven't been tested yet.</p><p>Without a suitable card you can still write, edit and export: export runs FFmpeg on your processor. A PC without an NVIDIA card hasn't been tested yet either.</p></div>
+      </details>
+      <details>
+        <summary>Are the AI models included?</summary>
+        <div><p>No. The installer contains Negi and FFmpeg. ComfyUI and the Wan 2.1 models are separate free downloads, about 11 GB together; <a class="link" href="#requirements">Set up video generation</a> lists the files and where they go.</p></div>
+      </details>
+      <details>
+        <summary>How much disk space does it take?</summary>
+        <div><p>About 600 MB for Negi. Generating video locally adds about 6 GB for ComfyUI and 9.2 GB for the Wan 2.1 models, and a local language model about 5 GB more. A generated 3-second clip is usually under 1 MB; your own media and exports take what they take.</p></div>
+      </details>
+      <details>
+        <summary>What's the difference between the editions?</summary>
+        <div><p>Community is free and does everything up to a 480p export. Creator adds 1080p export and publishing; Studio adds 4K, analytics and a comment inbox. Publishing, analytics and the inbox are still in preview. <a class="link" href="#editions">Compare editions</a>.</p></div>
+      </details>
+      <details>
+        <summary>How do I get an activation key?</summary>
+        <div><p>Email <a class="link" href="mailto:mustafa123.my53@gmail.com?subject=Negi%20activation%20key">mustafa123.my53@gmail.com</a>, then enter the key on Negi's License page.</p></div>
+      </details>
+      <details>
+        <summary>Is there a Mac, Linux or Android version?</summary>
+        <div><p>Not yet. Negi runs on Windows 10 and 11 (64-bit) only.</p></div>
+      </details>
+      <details>
+        <summary>Where do I get help or report a bug?</summary>
+        <div><p><a class="link" href="https://github.com/Mustihaft/negi/issues">Open an issue on GitHub</a> or email <a class="link" href="mailto:mustafa123.my53@gmail.com?subject=Negi">mustafa123.my53@gmail.com</a>. Tell us your Negi version, your Windows version and your graphics card.</p></div>
+      </details>
     </div>
   </section>
 </main>
 
 <div class="wrap">
   <footer>
-    <p class="small">Check your download: the installer's SHA-256 is <span class="mono hash" data-sha>a1a917146124645e73ac38e304c951367ad7cfeebdb0c5bac28ab78664bc05c0</span>. In PowerShell, run <span class="mono">Get-FileHash</span> on the file and compare.</p>
+    <a class="brand" href="./" title="ネギ"><img src="assets/mark-dark.png" alt="" width="30" height="30" loading="lazy">Negi</a>
+    <div class="links">
+      <a class="link" href="https://github.com/Mustihaft/negi/releases">Releases</a>
+      <a class="link" href="https://github.com/Mustihaft/negi/issues">Report a bug</a>
+      <a class="link" href="mailto:mustafa123.my53@gmail.com?subject=Negi">Contact</a>
+    </div>
     <p class="small">Thank you for trying Negi. 39!</p>
-    <p class="small">The installer includes FFmpeg, licensed under the GPL. <a class="link" href="https://github.com/Mustihaft/negi/releases">All versions</a></p>
+    <p class="small">The installer includes FFmpeg 9.0.2, licensed under the GPL. Wan 2.1 is licensed under Apache 2.0; ComfyUI (GPL 3.0) is a separate program that Negi connects to. This site uses <a class="link" href="assets/fonts/LICENSE-instrument-sans.txt">Instrument Sans</a> and <a class="link" href="assets/fonts/LICENSE-jetbrains-mono.txt">JetBrains Mono</a> under the SIL Open Font License.</p>
   </footer>
 </div>
 
 <script>
-  // Newest release from GitHub; the links above already point at a working installer if this fails.
+  // Newest release from GitHub; the page already points at a working installer if this fails.
   fetch('https://api.github.com/repos/Mustihaft/negi/releases/latest')
     .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
     .then((rel) => {
       const exe = rel.assets.find((a) => /\.exe$/i.test(a.name))
       if (!exe) return
-      const sha = (rel.body || '').match(/\b[a-f0-9]{64}\b/i)
+      const sha = (exe.digest || '').replace(/^sha256:/, '') || ((rel.body || '').match(/\b[a-f0-9]{64}\b/i) || [])[0]
+      const set = (sel, text) => document.querySelectorAll(sel).forEach((el) => (el.textContent = text))
       document.querySelectorAll('[data-dl]').forEach((a) => (a.href = exe.browser_download_url))
-      document.querySelectorAll('[data-version]').forEach((s) => (s.textContent = rel.tag_name.replace(/^v/, '')))
-      document.querySelectorAll('[data-size]').forEach((s) => (s.textContent = Math.round(exe.size / 1048576) + ' MB'))
-      if (sha) document.querySelectorAll('[data-sha]').forEach((s) => (s.textContent = sha[0].toLowerCase()))
+      document.querySelectorAll('[data-notes]').forEach((a) => (a.href = rel.html_url))
+      set('[data-version]', rel.tag_name.replace(/^v/, ''))
+      set('[data-size]', Math.round(exe.size / 1048576) + ' MB')
+      set('[data-file]', exe.name)
+      set('[data-date]', new Date(rel.published_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }))
+      if (sha) set('[data-sha]', sha.toLowerCase())
     })
     .catch(() => {})
 
-  // Two clips generated with Negi on the same PC; each visit shows one of them at random.
+  document.querySelector('[data-copy]').addEventListener('click', (e) => {
+    const btn = e.currentTarget
+    navigator.clipboard.writeText(document.querySelector('[data-sha]').textContent.trim()).then(
+      () => (btn.textContent = 'Copied'),
+      () => (btn.textContent = 'Select and copy'),
+    )
+  })
+
+  // The menu is a <details>; picking a link closes it.
+  const menu = document.querySelector('.menu')
+  menu.addEventListener('click', (e) => { if (e.target.closest('a')) menu.open = false })
+
+  // Clips always autoplay without player controls (owner's choice); a blocked autoplay leaves the poster.
+  // Example clips play only while on screen.
+  const seen = new IntersectionObserver((entries) =>
+    entries.forEach((en) => (en.isIntersecting ? en.target.play().catch(() => {}) : en.target.pause())),
+  )
+  document.querySelectorAll('[data-clip]').forEach((v) => seen.observe(v))
+
+  // Clips generated with Negi on the same PC; each visit shows one of them at random in the hero.
   // `off: true` takes a clip out of rotation; its files stay in assets/.
   const CLIPS = [
-    { name: 'fox-loop', off: true, label: 'A red fox sitting in falling snow in a pine forest', time: '5 min 17 s' },
+    { name: 'fox-loop', label: 'A red fox sitting in falling snow in a pine forest', time: '5 min 17 s' },
     { name: 'anime-loop', label: 'An anime girl with long turquoise hair and cherry blossom petals in the wind at sunset', time: '4 min 39 s' },
     { name: 'catgirl-loop', label: 'An anime cat girl with silver hair watching the rain from a window at night', time: '4 min 57 s' },
-    { name: 'foxgirl-loop', label: 'A cheerful anime fox girl in a shrine maiden outfit bouncing happily in an autumn courtyard', time: '4 min 52 s', how: 'the first 21 of 49 frames, played forwards and back' },
   ]
   const on = CLIPS.filter((c) => !c.off)
   const clip = on[Math.floor(Math.random() * on.length)]
@@ -404,13 +638,13 @@
     video.src = `assets/${clip.name}.mp4`
     video.setAttribute('aria-label', `${clip.label}, generated by Negi`)
     document.querySelector('[data-hero-caption]').textContent =
-      `Generated with Negi on a GeForce RTX 3060 Ti in ${clip.time}: Wan 2.1 (1.3B), 832 × 480, ${clip.how ?? '49 frames, looped with a crossfade'}.`
+      `in ${clip.time} on a GeForce RTX 3060 Ti (Wan 2.1 1.3B, 832 × 480, ${clip.how ?? '49 frames, looped with a crossfade'})`
   }
 
   // The one orchestrated moment: the clip resolves from the mark's halftone dots into footage.
-  const still = matchMedia('(prefers-reduced-motion: reduce)').matches
-  if (still) {
-    video.controls = true
+  // With reduced motion the clip still plays, just without the dot effect.
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    video.play().catch(() => {})
   } else {
     const box = video.parentElement
     const canvas = document.createElement('canvas')
@@ -419,22 +653,27 @@
     const ctx = canvas.getContext('2d')
     const sample = document.createElement('canvas').getContext('2d', { willReadFrequently: true })
     const clay = getComputedStyle(document.documentElement).getPropertyValue('--clay').trim()
-    const bg = getComputedStyle(canvas).backgroundColor
     const start = () => {
       const w = (canvas.width = Math.round(box.clientWidth * devicePixelRatio))
       const h = (canvas.height = Math.round(box.clientHeight * devicePixelRatio))
+      // dots cover the picture as object-fit: contain places it, so they dissolve onto the footage
+      const s = Math.min(w / video.videoWidth, h / video.videoHeight)
+      const pw = video.videoWidth * s
+      const ph = video.videoHeight * s
+      const ox = (w - pw) / 2
+      const oy = (h - ph) / 2
       const t0 = performance.now()
       const ms = 1700
       const frame = (now) => {
         const p = Math.min(1, (now - t0) / ms)
         const cols = Math.round(18 + 70 * p * p) // the grid gets finer as the picture resolves
-        const cell = w / cols
-        const rows = Math.ceil(h / cell)
+        const cell = pw / cols
+        const rows = Math.ceil(ph / cell)
         sample.canvas.width = cols
         sample.canvas.height = rows
         sample.drawImage(video, 0, 0, cols, rows)
         const px = sample.getImageData(0, 0, cols, rows).data
-        ctx.fillStyle = bg
+        ctx.fillStyle = '#000'
         ctx.fillRect(0, 0, w, h)
         ctx.fillStyle = clay
         for (let y = 0; y < rows; y++)
@@ -444,7 +683,7 @@
             const r = (cell / 2) * Math.sqrt(lum) * 0.95
             if (r < 0.4) continue
             ctx.beginPath()
-            ctx.arc(x * cell + cell / 2, y * cell + cell / 2, r, 0, Math.PI * 2)
+            ctx.arc(ox + x * cell + cell / 2, oy + y * cell + cell / 2, r, 0, Math.PI * 2)
             ctx.fill()
           }
         canvas.style.opacity = String(p < 0.6 ? 1 : 1 - (p - 0.6) / 0.4)
@@ -453,10 +692,7 @@
       }
       requestAnimationFrame(frame)
     }
-    video.play().then(start, () => {
-      canvas.remove()
-      video.controls = true // autoplay blocked (e.g. battery saver)
-    })
+    video.play().then(start, () => canvas.remove())
   }
 </script>
 </body>
