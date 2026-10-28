@@ -8,7 +8,10 @@
 <meta name="color-scheme" content="dark">
 <meta name="theme-color" content="#17181b">
 <meta property="og:title" content="Negi">
-<meta property="og:description" content="Turn an idea into a finished video, on your own PC. For Windows 10 and 11.">
+<meta property="og:description" content="Make AI video on your own PC. For Windows 10 and 11.">
+<meta property="og:url" content="https://mustihaft.github.io/negi/">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://mustihaft.github.io/negi/">
 <meta property="og:image" content="https://mustihaft.github.io/negi/assets/og.jpg">
 <meta property="og:type" content="website">
 <link rel="icon" href="assets/mark-light.png" media="(prefers-color-scheme: light)">
@@ -87,7 +90,7 @@
   /* header */
   .bar { position: sticky; top: 0; z-index: 30; background: var(--bg); border-bottom: 1px solid var(--line); }
   .bar .wrap { display: flex; align-items: center; gap: 20px; min-height: var(--bar); }
-  .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 640; font-stretch: 85%; font-size: 19px; margin-right: auto; }
+  .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 640; font-stretch: 85%; font-size: 19px; margin-right: auto; min-height: 44px; }
   .brand img { width: 30px; height: 30px; border-radius: 8px; }
   .nav { display: flex; gap: 2px; }
   .nav a, .menu a { text-decoration: none; color: var(--ink-2); padding: 10px 12px; border-radius: 7px; font-size: 15px; }
@@ -121,7 +124,7 @@
   .stage figcaption { padding-inline: clamp(14px, 2.4vw, 30px); max-width: 62em; }
 
   /* sections */
-  .block { padding-block: clamp(64px, 8vw, 112px); display: grid; gap: clamp(32px, 4vw, 48px); border-top: 1px solid var(--line); }
+  .block { padding-block: clamp(56px, 7vw, 96px); display: grid; gap: clamp(32px, 4vw, 48px); border-top: 1px solid var(--line); }
   .block > header { display: grid; gap: 14px; max-width: 48em; }
   .group { display: grid; gap: 20px; }
 
@@ -139,11 +142,20 @@
   thead th { font-weight: 600; color: var(--ink-2); font-size: 15px; border-bottom-color: var(--line-strong); }
   .table-box tbody tr:last-child > * { border-bottom: 0; }
   .bench { min-width: 640px; }
-  .editions { min-width: 640px; table-layout: fixed; }
-  .editions thead th { color: var(--ink); font-size: 20px; font-stretch: 85%; }
-  .editions thead th small { display: block; font-weight: 400; font-size: 15px; color: var(--ink-3); font-stretch: 100%; }
-  .editions tbody th { font-weight: 500; color: var(--ink-2); width: 31%; }
-  td.no { color: var(--ink-3); }
+  /* editions: three cards whose rows line up (subgrid); they simply stack on narrow screens */
+  .eds { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(9, auto); column-gap: 20px; margin: 0; padding: 0; list-style: none; }
+  .ed { grid-row: span 9; display: grid; grid-template-rows: subgrid; row-gap: 0; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); padding: 24px; }
+  .ed h3 { font-size: 24px; font-stretch: 85%; }
+  .ed-how { color: var(--ink-3); font-size: 15px; padding-top: 2px; }
+  .ed-res { display: grid; gap: 2px; padding-block: 22px 18px; }
+  .ed-res strong { font: 620 64px/0.9 var(--font); font-stretch: 75%; color: var(--ink); }
+  .ed-res span { color: var(--ink-3); font-size: 15px; }
+  .ed dl { grid-row: span 5; display: grid; grid-template-rows: subgrid; row-gap: 0; margin: 0; }
+  .ed dl > div { border-top: 1px solid var(--line); padding-block: 12px; display: grid; gap: 2px; align-content: start; }
+  .ed dt { color: var(--ink-3); font-size: 14px; }
+  .ed dd { margin: 0; font-size: 16px; }
+  .ed dd.no { color: var(--ink-3); }
+  .ed .btn { margin-top: 18px; align-self: end; }
   .tag { display: inline-block; margin-left: 6px; padding: 1px 8px; border: 1px solid var(--line-strong); border-radius: 999px; font-size: 13px; font-weight: 500; color: var(--ink-2); vertical-align: 2px; white-space: nowrap; }
 
   /* how it works: a real sequence, so the steps are numbered */
@@ -178,6 +190,7 @@
   .pair ul { margin: 0; padding-left: 1.1em; color: var(--ink-2); display: grid; gap: 6px; }
   .howto { margin: 0; padding: 0; list-style: none; counter-reset: howto; display: grid; gap: 16px; max-width: 52em; }
   .howto li { counter-increment: howto; display: grid; grid-template-columns: 36px 1fr; gap: 14px; color: var(--ink-2); }
+  .howto li > div { display: grid; gap: 10px; min-width: 0; }
   .howto li::before { content: counter(howto); display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--line-strong); font-weight: 600; font-size: 15px; color: var(--ink); }
   .howto code { color: var(--ink); overflow-wrap: anywhere; }
 
@@ -188,7 +201,8 @@
   .facts { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 8px 20px; font-size: 16px; }
   .facts dt { color: var(--ink-3); }
   .facts dd { margin: 0; }
-  .links { display: flex; flex-wrap: wrap; gap: 8px 22px; font-size: 16px; }
+  .links { display: flex; flex-wrap: wrap; gap: 0 22px; font-size: 16px; }
+  .links a { display: inline-flex; align-items: center; min-height: 44px; }
   .code { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; }
   .code code { flex: 1; min-width: 0; color: var(--ink); overflow-wrap: anywhere; font-size: 13px; line-height: 1.5; }
   .copy { flex: none; min-height: 40px; padding: 0 14px; border-radius: 7px; border: 1px solid var(--line-strong); background: var(--raised); color: var(--ink); font: 500 14px/1 var(--font); cursor: pointer; }
@@ -216,6 +230,9 @@
   }
   @media (max-width: 900px) {
     .hero-head, .step, .get { grid-template-columns: minmax(0, 1fr); }
+    .eds { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; row-gap: 16px; }
+    .ed { grid-row: auto; grid-template-rows: none; }
+    .ed dl { grid-row: auto; grid-template-rows: none; }
     .clips, .features, .features.four { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .reqs dl > div { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); }
     .reqs dd:last-child { grid-column: 2; }
@@ -279,7 +296,7 @@
 <main id="main">
   <section class="wrap hero" aria-labelledby="title">
     <div class="hero-head">
-      <h1 id="title">Turn an idea into a finished video, on your own PC.</h1>
+      <h1 id="title">Make AI video on your own PC.</h1>
       <div class="hero-side">
         <p class="lede">Negi is a Windows app for making AI video. A language model drafts the script and scenes, an open video model renders each scene on your graphics card, and a timeline editor cuts it all together. Your projects stay on your computer.</p>
         <div class="actions">
@@ -296,7 +313,7 @@
     <figure class="stage">
       <div class="frame">
         <div class="window">
-          <img src="assets/editor-dark.webp" width="1480" height="900" fetchpriority="high" alt="The Negi editor: a media library with generated clips and music, the program monitor, clip settings, and a timeline with two video tracks and an audio track.">
+          <img src="assets/editor-dark.webp" srcset="assets/editor-dark.webp 1480w, assets/editor-dark-2x.webp 2960w" sizes="(min-width: 1232px) 1140px, calc(100vw - 60px)" width="1480" height="900" fetchpriority="high" alt="The Negi editor: a media library with generated clips and music, the program monitor, clip settings, and a timeline with two video tracks and an audio track.">
           <div class="monitor">
             <video data-hero muted loop playsinline preload="metadata" poster="assets/anime-loop.webp" src="assets/anime-loop.mp4" aria-label="An anime girl with long turquoise hair and cherry blossom petals in the wind at sunset, generated by Negi"></video>
           </div>
@@ -358,28 +375,28 @@
           <h3>Write the script</h3>
           <p>Describe your idea. A language model writes a script and splits it into scenes, each with a shot prompt you can edit before anything is generated. This script came from qwen2.5-coder 7B running in Ollama on the same PC. You can also write everything yourself.</p>
         </div>
-        <a class="shot" href="assets/storyboard-dark.webp"><img src="assets/storyboard-dark.webp" width="1480" height="900" loading="lazy" alt="The Storyboard view: the concept, the local Ollama model, the written script, and the scenes it planned, each with a shot prompt, things to avoid and a length."></a>
+        <a class="shot" href="assets/storyboard-dark-2x.webp"><img src="assets/storyboard-dark.webp" srcset="assets/storyboard-dark.webp 1480w, assets/storyboard-dark-2x.webp 2960w" sizes="(min-width: 1232px) 763px, (min-width: 901px) 64vw, calc(100vw - 32px)" width="1480" height="900" loading="lazy" alt="The Storyboard view: the concept, the local Ollama model, the written script, and the scenes it planned, each with a shot prompt, things to avoid and a length."></a>
       </li>
       <li class="step">
         <div class="step-text">
           <h3>Generate the scenes</h3>
           <p>Send a scene, or your own prompt, to ComfyUI on your PC. Negi shows which models are ready, follows the progress and adds the finished clip to your project.</p>
         </div>
-        <a class="shot" href="assets/generate-dark.webp"><img src="assets/generate-dark.webp" width="1480" height="900" loading="lazy" alt="The Generate view: Wan 2.1 text-to-video marked Ready, the prompt, size and length settings, and the finished clip ready to add to the timeline."></a>
+        <a class="shot" href="assets/generate-dark-2x.webp"><img src="assets/generate-dark.webp" srcset="assets/generate-dark.webp 1480w, assets/generate-dark-2x.webp 2960w" sizes="(min-width: 1232px) 763px, (min-width: 901px) 64vw, calc(100vw - 32px)" width="1480" height="900" loading="lazy" alt="The Generate view: Wan 2.1 text-to-video marked Ready, the prompt, size and length settings, and the finished clip ready to add to the timeline."></a>
       </li>
       <li class="step">
         <div class="step-text">
           <h3>Edit on a timeline</h3>
           <p>Arrange the clips with your own footage, images and music on as many video and audio tracks as you need. Trim, split, add titles, fades and cross-dissolves, and undo anything. The monitor gives a quick preview; the exported file is the exact result.</p>
         </div>
-        <a class="shot" href="assets/editor-dark.webp"><img src="assets/timeline-dark.webp" width="1252" height="282" loading="lazy" alt="The timeline: two generated clips on the first video track, a title on the second, and a music track."></a>
+        <a class="shot" href="assets/editor-dark-2x.webp"><img src="assets/timeline-dark.webp" srcset="assets/timeline-dark.webp 1252w, assets/timeline-dark-2x.webp 2504w" sizes="(min-width: 1232px) 763px, (min-width: 901px) 64vw, calc(100vw - 32px)" width="1252" height="282" loading="lazy" alt="The timeline: two generated clips on the first video track, a title on the second, and a music track."></a>
       </li>
       <li class="step">
         <div class="step-text">
           <h3>Export</h3>
           <p>Render MP4 (H.264 or H.265), WebM (VP9) or ProRes. Negi checks every file with FFmpeg before it saves it, so a failed render never replaces a good one.</p>
         </div>
-        <a class="shot narrow" href="assets/export-dark.webp"><img src="assets/export-crop-dark.webp" width="560" height="560" loading="lazy" alt="The Export video dialog with format, resolution, frame rate, quality, encoding speed and destination."></a>
+        <a class="shot narrow" href="assets/export-dark-2x.webp"><img src="assets/export-crop-dark.webp" srcset="assets/export-crop-dark.webp 560w, assets/export-crop-dark-2x.webp 1120w" sizes="(min-width: 600px) 560px, calc(100vw - 32px)" width="560" height="560" loading="lazy" alt="The Export video dialog with format, resolution, frame rate, quality, encoding speed and destination."></a>
       </li>
     </ol>
   </section>
@@ -459,27 +476,50 @@
   <section class="wrap block" id="editions" aria-labelledby="editions-title">
     <header>
       <h2 id="editions-title">Editions</h2>
-      <p class="lede">Everything you need to make a video is free. Creator and Studio add higher export resolutions and publishing.</p>
+      <p class="lede">Writing, generating and editing work the same in every edition. The editions differ in how large you can export and in posting to your social accounts.</p>
     </header>
-    <div class="table-box" role="region" aria-label="Editions" tabindex="0">
-      <table class="editions">
-        <thead>
-          <tr>
-            <td></td>
-            <th scope="col">Community<small>Free</small></th>
-            <th scope="col">Creator<small>Activation key</small></th>
-            <th scope="col">Studio<small>Activation key</small></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><th scope="row">Write, generate and edit</th><td>Included</td><td>Included</td><td>Included</td></tr>
-          <tr><th scope="row">Export resolution</th><td>Up to 480p</td><td>Up to 1080p</td><td>Up to 4K</td></tr>
-          <tr><th scope="row">Publish and schedule <span class="tag">Preview</span></th><td class="no">Prepares files for you to post</td><td>Included</td><td>Included</td></tr>
-          <tr><th scope="row">Analytics and comment inbox <span class="tag">Preview</span></th><td class="no">Not included</td><td class="no">Not included</td><td>Included</td></tr>
-        </tbody>
-      </table>
-    </div>
-    <p class="note">For a Creator or Studio activation key, email <a class="link" href="mailto:mustafa123.my53@gmail.com?subject=Negi%20activation%20key">mustafa123.my53@gmail.com</a> and enter the key on Negi's License page. Without a key Negi runs as Community, and your projects open in every edition.</p>
+    <ul class="eds">
+      <li class="ed">
+        <h3>Community</h3>
+        <p class="ed-how">Free download, no key</p>
+        <p class="ed-res"><strong>480p</strong><span>largest export, such as 854 × 480</span></p>
+        <dl>
+          <div><dt>Write, generate and edit</dt><dd>Included</dd></div>
+          <div><dt>Post to social accounts <span class="tag">Preview</span></dt><dd class="no">Not included. Negi prepares the file and text for you to post yourself.</dd></div>
+          <div><dt>Schedule posts</dt><dd class="no">Not included</dd></div>
+          <div><dt>Analytics and comment inbox <span class="tag">Preview</span></dt><dd class="no">Not included</dd></div>
+          <div><dt>License check-ins</dt><dd>None</dd></div>
+        </dl>
+        <a class="btn quiet sm" href="#download">Download</a>
+      </li>
+      <li class="ed">
+        <h3>Creator</h3>
+        <p class="ed-how">Activation key</p>
+        <p class="ed-res"><strong>1080p</strong><span>largest export, such as 1920 × 1080</span></p>
+        <dl>
+          <div><dt>Write, generate and edit</dt><dd>Included</dd></div>
+          <div><dt>Post to social accounts <span class="tag">Preview</span></dt><dd>Up to 5 accounts, 5 per post</dd></div>
+          <div><dt>Schedule posts</dt><dd>Included</dd></div>
+          <div><dt>Analytics and comment inbox <span class="tag">Preview</span></dt><dd class="no">Not included</dd></div>
+          <div><dt>License check-ins</dt><dd>Yes; works offline for 7 days by default</dd></div>
+        </dl>
+        <a class="btn quiet sm" href="mailto:mustafa123.my53@gmail.com?subject=Negi%20Creator%20activation%20key">Email for a key</a>
+      </li>
+      <li class="ed">
+        <h3>Studio</h3>
+        <p class="ed-how">Activation key</p>
+        <p class="ed-res"><strong>4K</strong><span>largest export, such as 3840 × 2160</span></p>
+        <dl>
+          <div><dt>Write, generate and edit</dt><dd>Included</dd></div>
+          <div><dt>Post to social accounts <span class="tag">Preview</span></dt><dd>Up to 50 accounts, 15 per post</dd></div>
+          <div><dt>Schedule posts</dt><dd>Included</dd></div>
+          <div><dt>Analytics and comment inbox <span class="tag">Preview</span></dt><dd>Included</dd></div>
+          <div><dt>License check-ins</dt><dd>Yes; works offline for 7 days by default</dd></div>
+        </dl>
+        <a class="btn quiet sm" href="mailto:mustafa123.my53@gmail.com?subject=Negi%20Studio%20activation%20key">Email for a key</a>
+      </li>
+    </ul>
+    <p class="note">Activation keys come by email from <a class="link" href="mailto:mustafa123.my53@gmail.com?subject=Negi%20activation%20key">mustafa123.my53@gmail.com</a>; enter one on Negi's License page. Items marked Preview are built but so far only tested against simulated services. If a key ends, Negi keeps working as Community and your projects stay as they are.</p>
   </section>
 
   <section class="wrap block" id="download" aria-labelledby="download-title">
@@ -503,15 +543,20 @@
           <a class="link" href="https://github.com/Mustihaft/negi/releases">All versions</a>
         </div>
         <p class="small">Negi installs for your Windows user only and needs no administrator rights. Remove it any time under Settings, Apps, Installed apps.</p>
+        <p class="small">Download stopped or failed? Start it again from the <a class="link" data-notes href="https://github.com/Mustihaft/negi/releases/tag/v0.1.7">release page</a>. The complete file is <span data-bytes>183,260,983</span> bytes (File Explorer shows this under Properties).</p>
       </div>
       <div class="card" id="verify">
-        <h3>Check the file before you run it</h3>
-        <p>GitHub records a SHA-256 checksum for the installer. After downloading, run this in PowerShell and compare the result with the checksum below. Every character must match; upper or lower case doesn't matter.</p>
-        <div class="code"><code>Get-FileHash "$env:USERPROFILE\Downloads\<span data-file>Negi-Setup-0.1.7-x64.exe</span>"</code></div>
-        <div class="code"><code data-sha>000aeb1b6cbcfa77ad714da384ebae180d76c8bc564d0769a89350cda282bdae</code><button class="copy" type="button" data-copy>Copy</button></div>
-        <p>A matching checksum shows the file arrived intact and is the one published on this project's GitHub release. It can't tell you who built it; that's what code signing is for.</p>
-        <h3>About the Windows SmartScreen warning</h3>
-        <p>The installer isn't code-signed yet, so Windows can't name its publisher and will probably show “Windows protected your PC”. That warning means the file is unknown to Windows. It isn't a malware finding, and nothing on this page can prove the file is safe. Only continue if the checksum matches and you trust this project: choose <b>More info</b>, check that the app is <b data-file>Negi-Setup-0.1.7-x64.exe</b>, then <b>Run anyway</b>. If you're unsure, don't run it.</p>
+        <h3>Before you run the installer</h3>
+        <ol class="howto">
+          <li><div><p><b>Download only from this page or <a class="link" href="https://github.com/Mustihaft/negi/releases">Negi's GitHub releases</a>.</b> A copy from anywhere else can't be checked against the published checksum.</p></div></li>
+          <li><div><p><b>Check the file.</b> Open PowerShell, paste this command and press Enter. It prints <code>True</code> when your file matches the SHA-256 checksum published for this release.</p>
+            <div class="code"><code data-check>(Get-FileHash "$env:USERPROFILE\Downloads\Negi-Setup-0.1.7-x64.exe").Hash -eq "000aeb1b6cbcfa77ad714da384ebae180d76c8bc564d0769a89350cda282bdae"</code><button class="copy" type="button" data-copy aria-label="Copy the check command">Copy</button></div>
+            <p class="small">Saved it to another folder? Change the folder in the command. Checksum: <code data-sha>000aeb1b6cbcfa77ad714da384ebae180d76c8bc564d0769a89350cda282bdae</code></p></div></li>
+          <li><div><p><b>If it prints False, stop.</b> Delete the file and download it again from this page. Don't run a file that doesn't match.</p></div></li>
+        </ol>
+        <h3>Why Windows may warn you</h3>
+        <p>The installer isn't code-signed yet, so Windows can't show who published it, and SmartScreen will probably say “Windows protected your PC”. That warning is about an unknown file, not a malware finding. A matching checksum proves your file is exactly the one published on GitHub; it can't prove the software is harmless.</p>
+        <p>If the check printed True and you trust this project, choose <b>More info</b>, make sure the file is <b data-file>Negi-Setup-0.1.7-x64.exe</b>, then <b>Run anyway</b>. If you're unsure, don't run it. Never turn off Microsoft Defender or SmartScreen for Negi; it doesn't need that.</p>
       </div>
     </div>
 
@@ -553,6 +598,10 @@
         <div><p>About 600 MB for Negi. Generating video locally adds about 6 GB for ComfyUI and 9.2 GB for the Wan 2.1 models, and a local language model about 5 GB more. A generated 3-second clip is usually under 1 MB; your own media and exports take what they take.</p></div>
       </details>
       <details>
+        <summary>Why does Windows warn me about the installer?</summary>
+        <div><p>The installer isn't code-signed yet, so Windows doesn't know its publisher and SmartScreen shows a warning. <a class="link" href="#verify">Check your download</a> before you decide to run it, and don't run it if the check fails.</p></div>
+      </details>
+      <details>
         <summary>What's the difference between the editions?</summary>
         <div><p>Community is free and does everything up to a 480p export. Creator adds 1080p export and publishing; Studio adds 4K, analytics and a comment inbox. Publishing, analytics and the inbox are still in preview. <a class="link" href="#editions">Compare editions</a>.</p></div>
       </details>
@@ -591,8 +640,9 @@
     .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
     .then((rel) => {
       const exe = rel.assets.find((a) => /\.exe$/i.test(a.name))
-      if (!exe) return
-      const sha = (exe.digest || '').replace(/^sha256:/, '') || ((rel.body || '').match(/\b[a-f0-9]{64}\b/i) || [])[0]
+      const sha = exe && ((exe.digest || '').replace(/^sha256:/, '') || ((rel.body || '').match(/\b[a-f0-9]{64}\b/i) || [])[0])
+      // link, version and checksum change together, or the built-in 0.1.7 set stays
+      if (!exe || !sha) return
       const set = (sel, text) => document.querySelectorAll(sel).forEach((el) => (el.textContent = text))
       document.querySelectorAll('[data-dl]').forEach((a) => (a.href = exe.browser_download_url))
       document.querySelectorAll('[data-notes]').forEach((a) => (a.href = rel.html_url))
@@ -600,15 +650,17 @@
       set('[data-size]', Math.round(exe.size / 1048576) + ' MB')
       set('[data-file]', exe.name)
       set('[data-date]', new Date(rel.published_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }))
-      if (sha) set('[data-sha]', sha.toLowerCase())
+      set('[data-sha]', sha.toLowerCase())
+      set('[data-bytes]', exe.size.toLocaleString('en-US'))
+      set('[data-check]', `(Get-FileHash "$env:USERPROFILE\\Downloads\\${exe.name}").Hash -eq "${sha.toLowerCase()}"`)
     })
     .catch(() => {})
 
   document.querySelector('[data-copy]').addEventListener('click', (e) => {
     const btn = e.currentTarget
-    navigator.clipboard.writeText(document.querySelector('[data-sha]').textContent.trim()).then(
+    navigator.clipboard.writeText(document.querySelector('[data-check]').textContent.trim()).then(
       () => (btn.textContent = 'Copied'),
-      () => (btn.textContent = 'Select and copy'),
+      () => (btn.textContent = 'Select the text to copy'),
     )
   })
 
