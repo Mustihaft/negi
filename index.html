@@ -8,7 +8,7 @@
 <meta name="color-scheme" content="dark light">
 <meta property="og:title" content="Negi">
 <meta property="og:description" content="Make AI video on your own PC. For Windows 10 and 11.">
-<meta property="og:image" content="https://mustihaft2006.github.io/ai-video-studio-download/assets/og.jpg">
+<meta property="og:image" content="https://mustihaft.github.io/ai-video-studio-download/assets/og.jpg">
 <meta property="og:type" content="website">
 <link rel="icon" href="assets/mark-light.png" media="(prefers-color-scheme: light)">
 <link rel="icon" href="assets/mark-dark.png" media="(prefers-color-scheme: dark)">
@@ -246,11 +246,11 @@
         <h1 id="title">Make AI video on your own PC.</h1>
         <p class="lede">Negi turns an idea into a finished video. It writes the script with a local language model, generates every scene with open video models on your graphics card, and gives you a timeline to cut it together. Your projects stay on your computer.</p>
         <div class="actions">
-          <a class="btn" data-dl href="https://github.com/Mustihaft2006/ai-video-studio-download/releases/download/v0.1.6/AI-Video-Studio-Setup-0.1.6-x64.exe">
+          <a class="btn" data-dl href="https://github.com/Mustihaft/ai-video-studio-download/releases/download/v0.1.6/AI-Video-Studio-Setup-0.1.6-x64.exe">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
             Download for Windows
           </a>
-          <a class="link" href="https://github.com/Mustihaft2006/ai-video-studio-download/releases">Other versions</a>
+          <a class="link" href="https://github.com/Mustihaft/ai-video-studio-download/releases">Other versions</a>
         </div>
         <p class="meta">Version <span data-version>0.1.6</span>, <span data-size>175 MB</span>. Windows 10 and 11, 64-bit.</p>
       </div>
@@ -356,7 +356,7 @@
       </div>
     </div>
     <div class="final">
-      <a class="btn" data-dl href="https://github.com/Mustihaft2006/ai-video-studio-download/releases/download/v0.1.6/AI-Video-Studio-Setup-0.1.6-x64.exe">
+      <a class="btn" data-dl href="https://github.com/Mustihaft/ai-video-studio-download/releases/download/v0.1.6/AI-Video-Studio-Setup-0.1.6-x64.exe">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
         Download for Windows
       </a>
@@ -369,13 +369,13 @@
   <footer>
     <p class="small">Check your download: the installer's SHA-256 is <span class="mono hash" data-sha>a1a917146124645e73ac38e304c951367ad7cfeebdb0c5bac28ab78664bc05c0</span>. In PowerShell, run <span class="mono">Get-FileHash</span> on the file and compare.</p>
     <p class="small">Thank you for trying Negi. 39!</p>
-    <p class="small">The installer includes FFmpeg, licensed under the GPL. <a class="link" href="https://github.com/Mustihaft2006/ai-video-studio-download/releases">All versions</a></p>
+    <p class="small">The installer includes FFmpeg, licensed under the GPL. <a class="link" href="https://github.com/Mustihaft/ai-video-studio-download/releases">All versions</a></p>
   </footer>
 </div>
 
 <script>
   // Newest release from GitHub; the links above already point at a working installer if this fails.
-  fetch('https://api.github.com/repos/Mustihaft2006/ai-video-studio-download/releases/latest')
+  fetch('https://api.github.com/repos/Mustihaft/ai-video-studio-download/releases/latest')
     .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
     .then((rel) => {
       const exe = rel.assets.find((a) => /\.exe$/i.test(a.name))
